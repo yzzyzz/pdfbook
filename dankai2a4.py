@@ -49,17 +49,14 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         raise RuntimeError(f"错误：文件夹 '{image_folder}' 中未找到任何有效图片！")
     print(f"提示：共找到 {len(image_files)} 张有效图片")
 
-    # --------------- 第三步：分组处理图片（每24页为一组） ---------------
-    # 每6张A4纸为一册，每张A4纸4页，共24页为一组
-    GROUP_SIZE = bucket_page_size * 4  # 每组24页
+    # --------------- 第三步：分组处理图片（每20页为一组） ---------------
+    # 每5张A4纸为一册，每张A4纸4页，共20页为一组
+    GROUP_SIZE = bucket_page_size * 4  # 每组20页
     grouped_images = []
     
     # 将图片按GROUP_SIZE分组
     for i in range(0, len(image_files), GROUP_SIZE):
         group = image_files[i:i + GROUP_SIZE]
-        # 如果最后一组不足24页，用None填充
-        while len(group) < GROUP_SIZE:
-            group.append(None)
         grouped_images.append(group)
     
     # --------------- 第四步：初始化PDF画布（横向A4） ---------------
@@ -74,15 +71,21 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 
     # --------------- 第五步：处理每组图片并添加到PDF ---------------
     total_sheet_count = 0
+    first_page = True
     
     for group_index, group in enumerate(grouped_images):
-        # 每组24页需要6张A4纸
-        a4_sheets_needed = bucket_page_size
+        # 计算当前组需要的A4纸数量
+        current_group_size = len(group)
+        a4_sheets_needed = (current_group_size + 3) // 4  # 向上取整到4的倍数再除以4
+        
+        if a4_sheets_needed == 0:
+            continue
+            
         # 获取A4纸的页面排列顺序
         page_sequence = util.genNumberSeqByA4Page(a4_sheets_needed)
         
         # 重新排列图片顺序以匹配页面序列
-        rearranged_group = [None] * GROUP_SIZE
+        rearranged_group = [None] * (a4_sheets_needed * 4)
         for sheet_index, sheet_pages in enumerate(page_sequence):
             for pos_index, page_num in enumerate(sheet_pages):
                 # 页面编号从1开始，转换为0基索引
@@ -93,22 +96,29 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                     position_in_a4 = pos_index
                     # 计算在rearranged_group中的位置
                     rearranged_index = a4_index * 4 + position_in_a4
-                    if rearranged_index < GROUP_SIZE:
+                    if rearranged_index < len(rearranged_group):
                         rearranged_group[rearranged_index] = group[img_index]
         
         # 处理重新排列后的图片（每张PDF页面放2张图片）
         for sheet_index in range(a4_sheets_needed):
             # 每张A4纸需要生成2页PDF（每页2个A5区域）
             for page_in_sheet in range(2):  # 0=正面, 1=背面
-                if total_sheet_count > 0:
-                    c.showPage()
-                
-                total_sheet_count += 1
-                
                 # 获取当前PDF页面上的2张图片
                 start_idx = sheet_index * 4 + page_in_sheet * 2
                 img1 = rearranged_group[start_idx] if start_idx < len(rearranged_group) else None
                 img2 = rearranged_group[start_idx + 1] if start_idx + 1 < len(rearranged_group) else None
+                
+                # 如果两张图片都不存在，跳过这一页（避免空白页）
+                if img1 is None and img2 is None:
+                    continue
+                
+                # 新页面（第一页无需showPage，后续页面需要）
+                if not first_page:
+                    c.showPage()
+                else:
+                    first_page = False
+                
+                total_sheet_count += 1
                 
                 # 在A4页面上绘制2个A5区域（左右排列）
                 if img1 and os.path.exists(img1):
@@ -131,7 +141,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                         a5_height=a5_height
                     )
                 
-                print(f"进度：第 {total_sheet_count} 页PDF → 已处理第 {group_index + 1} 组，A4纸 {sheet_index + 1}/6，页面 {page_in_sheet + 1}/2")
+                print(f"进度：第 {total_sheet_count} 页PDF → 已处理第 {group_index + 1} 组，A4纸 {sheet_index + 1}/{a4_sheets_needed}，页面 {page_in_sheet + 1}/2")
 
     # --------------- 第六步：保存PDF文件 ---------------
     c.save()
@@ -141,7 +151,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     print(f"📘 打印说明：")
     print(f"   1. 横向打印A4纸张")
     print(f"   2. 每页PDF包含2张图片（左右排列）")
-    print(f"   3. 每6张A4纸为一册，按顺序打印")
+    print(f"   3. 每5张A4纸为一册，按顺序打印")
     print(f"   4. 打印完成后对折装订成A5册子")
 
 def draw_single_image_on_a5(canvas_obj, img_path, x_offset, y_offset, a5_width, a5_height):
