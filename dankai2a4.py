@@ -120,7 +120,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 
                 total_sheet_count += 1
                 
-                # 在A4页面上绘制2个A5区域（左右排列）
+                # 在A4页面上绘制2个A5区域（左右排列，采用不同对齐方式）
                 if img1 and os.path.exists(img1):
                     draw_single_image_on_a5(
                         canvas_obj=c,
@@ -128,7 +128,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                         x_offset=0,  # 左侧A5区域
                         y_offset=0,
                         a5_width=a5_width,
-                        a5_height=a5_height
+                        a5_height=a5_height,
+                        alignment='left'  # 左侧图片左对齐
                     )
                 
                 if img2 and os.path.exists(img2):
@@ -138,7 +139,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                         x_offset=a5_width,  # 右侧A5区域
                         y_offset=0,
                         a5_width=a5_width,
-                        a5_height=a5_height
+                        a5_height=a5_height,
+                        alignment='right'  # 右侧图片右对齐
                     )
                 
                 print(f"进度：第 {total_sheet_count} 页PDF → 已处理第 {group_index + 1} 组，A4纸 {sheet_index + 1}/{a4_sheets_needed}，页面 {page_in_sheet + 1}/2")
@@ -150,13 +152,14 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     print(f"📄 PDF页数：{total_sheet_count}")
     print(f"📘 打印说明：")
     print(f"   1. 横向打印A4纸张")
-    print(f"   2. 每页PDF包含2张图片（左右排列）")
+    print(f"   2. 每页PDF包含2张图片（左侧左对齐，右侧右对齐）")
     print(f"   3. 每5张A4纸为一册，按顺序打印")
     print(f"   4. 打印完成后对折装订成A5册子")
 
-def draw_single_image_on_a5(canvas_obj, img_path, x_offset, y_offset, a5_width, a5_height):
+def draw_single_image_on_a5(canvas_obj, img_path, x_offset, y_offset, a5_width, a5_height, alignment='center'):
     """
-    在指定的A5区域内绘制单张图片（铺满整个A5区域）
+    在指定的A5区域内绘制单张图片，根据alignment参数决定对齐方式
+    :param alignment: 对齐方式 ('left', 'center', 'right')
     """
     with Image.open(img_path) as img:
         img_w, img_h = img.size
@@ -169,8 +172,18 @@ def draw_single_image_on_a5(canvas_obj, img_path, x_offset, y_offset, a5_width, 
     scaled_w = img_w * scale
     scaled_h = img_h * scale
     
-    # 在A5区域内居中
-    x = x_offset + (a5_width - scaled_w) / 2
+    # 根据对齐方式计算X坐标
+    if alignment == 'left':
+        # 左对齐
+        x = x_offset + 0  # 靠左边缘
+    elif alignment == 'right':
+        # 右对齐
+        x = x_offset + (a5_width - scaled_w)  # 靠右边缘
+    else:  # center
+        # 居中对齐
+        x = x_offset + (a5_width - scaled_w) / 2
+    
+    # Y坐标始终居中
     y = y_offset + (a5_height - scaled_h) / 2
 
     canvas_obj.drawImage(
