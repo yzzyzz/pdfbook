@@ -65,16 +65,16 @@ for img in $IMAGE_LIST; do
         # 获取两张图片
         img1=$(sed -n "$((count-1))p" temp_images.txt)
         img2=$(sed -n "${count}p" temp_images.txt)
-
-        # 创建一个A4页面，将两张图片垂直排列并旋转90度
-        CONVERT_CMD="magick \\( \"$img1\" -resize 2480x1754\\> -background white -gravity center -extent 2480x1754 \\) \\
-                \\( \"$img2\" -resize 2480x1754\\> -background white -gravity center -extent 2480x1754 \\) \\
-                -append -resize 1754x2480\\> -background white -gravity center -extent 1754x2480 \\
-                -rotate 90 -page 2480x3508 -units PixelsPerInch -density 300x300 \\
-                \"page_${page}.pdf\""
+        combine2picToA5 "$img1" "$img2" "page_${page}.pdf"
+        # # 创建一个A4页面，将两张图片垂直排列并旋转90度
+        # CONVERT_CMD="magick \\( \"$img1\" -resize 2480x1754\\> -background white -gravity center -extent 2480x1754 \\) \\
+        #         \\( \"$img2\" -resize 2480x1754\\> -background white -gravity center -extent 2480x1754 \\) \\
+        #         -append -resize 1754x2480\\> -background white -gravity center -extent 1754x2480 \\
+        #         -rotate 90 -page 2480x3508 -units PixelsPerInch -density 300x300 \\
+        #         \"page_${page}.pdf\""
         
-        echo "执行命令: $CONVERT_CMD"
-        eval $CONVERT_CMD
+        # echo "执行命令: $CONVERT_CMD"
+        # eval $CONVERT_CMD
         page=$((page + 1))
     fi
 done
