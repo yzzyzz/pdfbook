@@ -6,5 +6,4 @@ magick \
   -units PixelsPerInch \
   -density 300 \
   "merged_output.pdf"
-
 open "merged_output.pdf"
