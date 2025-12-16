@@ -17,6 +17,19 @@ INPUT_DIR="$1"
 OUTPUT_PDF="${2:-$(basename "$INPUT_DIR")_a4_2x2.pdf}"  # 默认输出名
 TMP_DIR="./tmp/cbz2pdf_$(date +%s)"  # 临时目录，避免冲突
 
+
+function combine2picToA5() {
+    magick \
+    \( "$1" -resize "1750x1238>" -background white -gravity center -extent 1750x1238 \) \
+    \( -size 1750x4 xc:black \) \
+    \( "$2" -resize "1750x1238>" -background white -gravity center -extent 1750x1238 \) \
+    -append \
+    -page "1750x2480" \
+    -units PixelsPerInch \
+    -density 300 \
+    "$3" 
+}
+
 # 函数：清理临时文件
 cleanup() {
     rm -rf "$TMP_DIR"
@@ -52,7 +65,7 @@ for img in $IMAGE_LIST; do
         # 获取两张图片
         img1=$(sed -n "$((count-1))p" temp_images.txt)
         img2=$(sed -n "${count}p" temp_images.txt)
-        
+
         # 创建一个A4页面，将两张图片垂直排列并旋转90度
         CONVERT_CMD="magick \\( \"$img1\" -resize 2480x1754\\> -background white -gravity center -extent 2480x1754 \\) \\
                 \\( \"$img2\" -resize 2480x1754\\> -background white -gravity center -extent 2480x1754 \\) \\
