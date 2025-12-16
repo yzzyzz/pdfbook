@@ -1,3 +1,7 @@
+#  单开图转a4 打印 booklet 模式
+#  输入：图片文件夹路径
+#  输出：生成的PDF文件（ booklet 模式）
+
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, A5
 from reportlab.lib.units import mm
@@ -16,6 +20,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     """
     # --------------- 第一步：参数校验 ---------------
     # 检查图片文件夹是否存在
+    bucket_page_size = 5
     if not os.path.isdir(image_folder):
         raise ValueError(f"错误：图片文件夹 '{image_folder}' 不存在或不是有效目录！")
     
@@ -46,7 +51,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 
     # --------------- 第三步：分组处理图片（每24页为一组） ---------------
     # 每6张A4纸为一册，每张A4纸4页，共24页为一组
-    GROUP_SIZE = 24  # 每组24页
+    GROUP_SIZE = bucket_page_size * 4  # 每组24页
     grouped_images = []
     
     # 将图片按GROUP_SIZE分组
@@ -72,7 +77,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     
     for group_index, group in enumerate(grouped_images):
         # 每组24页需要6张A4纸
-        a4_sheets_needed = 6
+        a4_sheets_needed = bucket_page_size
         # 获取A4纸的页面排列顺序
         page_sequence = util.genNumberSeqByA4Page(a4_sheets_needed)
         
