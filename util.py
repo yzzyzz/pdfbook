@@ -13,7 +13,6 @@ def genNumberSeqByA4Page(m):
     
     参数:
         m (int): A4纸张数量
-    
     返回:
         list: 每张A4纸上的4个页面编号列表
     """
@@ -53,4 +52,5 @@ if __name__ == "__main__":
     # 测试2张纸的情况
     print("2张纸:", genNumberSeqByA4Page(2))  # 应该输出 [[8, 1, 2, 7], [6, 3, 4, 5]]
     
-    print("6张纸:", genNumberSeqByA4Page(6))  # 应该输出 [[8, 1, 2, 7], [6, 3, 4, 5]]
+    print("6张纸:", genNumberSeqByA4Page(6
+                                       ))  # 应该输出 [[8, 1, 2, 7], [6, 3, 4, 5]]
