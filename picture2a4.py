@@ -1,3 +1,5 @@
+# 双开漫画转a4打印 成为4合一的漫画
+
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -42,7 +44,24 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         raise RuntimeError(f"错误：文件夹 '{image_folder}' 中未找到任何有效图片！")
     print(f"提示：共找到 {len(image_files)} 张有效图片")
 
-    # --------------- 第三步：初始化PDF画布（横向A4） ---------------
+    # --------------- 第三步：重新排列图片顺序 ---------------
+    # 每8张图分成一组，拼接顺序为 7-8-1-2-3-4-5-6
+    rearranged_images = []
+    for i in range(0, len(image_files), 8):
+        group = image_files[i:i+8]
+        # 如果不足8张，用None填充
+        while len(group) < 8:
+            group.append(None)
+        
+        # 按照 7-8-1-2-3-4-5-6 的顺序重新排列
+        # 注意：索引从0开始，所以是 6-7-0-1-2-3-4-5
+        reordered_group = [group[6], group[7], group[0], group[1], group[2], group[3], group[4], group[5]]
+        rearranged_images.extend(reordered_group)
+    
+    # 移除填充的None值
+    rearranged_images = [img for img in rearranged_images if img is not None]
+
+    # --------------- 第四步：初始化PDF画布（横向A4） ---------------
     from reportlab.lib.pagesizes import landscape
     landscape_pagesize = landscape(pagesize)  # 横向A4: 297mm x 210mm
     c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
@@ -53,11 +72,11 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     a5_height = page_height
     half_a5_height = a5_height / 2
 
-    # --------------- 第四步：处理图片并添加到PDF ---------------
+    # --------------- 第五步：处理图片并添加到PDF ---------------
     i = 0
     page_count = 0
     
-    while i < len(image_files):
+    while i < len(rearranged_images):
         # 新页面（第一页无需showPage，后续页面需要）
         if page_count > 0:
             c.showPage()
@@ -70,30 +89,50 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         right_x = a5_width
         
         # 左侧A5页面添加两张上下排列的图片
-        if i < len(image_files):
-            draw_two_images_in_a5(canvas_obj=c, 
-                                img_paths=image_files[i:i+2] if i+1 < len(image_files) else [image_files[i]], 
-                                x_offset=left_x, 
-                                y_offset=0, 
-                                a5_width=a5_width, 
-                                a5_height=a5_height)
-            processed_count = min(2, len(image_files) - i)
-            print(f"进度：第 {page_count} 页左侧A5 → 已添加 {processed_count} 张图片")
-            i += processed_count
+        if i < len(rearranged_images):
+            img_group = []
+            if i < len(rearranged_images):
+                img_group.append(rearranged_images[i])
+            if i + 1 < len(rearranged_images):
+                img_group.append(rearranged_images[i + 1])
+            
+            if img_group:
+                draw_two_images_in_a5(canvas_obj=c, 
+                                    img_paths=img_group, 
+                                    x_offset=left_x, 
+                                    y_offset=0, 
+                                    a5_width=a5_width, 
+                                    a5_height=a5_height)
+                processed_count = len(img_group)
+                img_names = [os.path.basename(img) if img else "空" for img in img_group]
+                print(f"进度：第 {page_count} 页左侧A5 → 已添加图片：{img_names}")
+                i += processed_count
+            else:
+                i += 1
         
         # 右侧A5页面添加两张上下排列的图片
-        if i < len(image_files):
-            draw_two_images_in_a5(canvas_obj=c, 
-                                img_paths=image_files[i:i+2] if i+1 < len(image_files) else [image_files[i]], 
-                                x_offset=right_x, 
-                                y_offset=0, 
-                                a5_width=a5_width, 
-                                a5_height=a5_height)
-            processed_count = min(2, len(image_files) - i)
-            print(f"进度：第 {page_count} 页右侧A5 → 已添加 {processed_count} 张图片")
-            i += processed_count
+        if i < len(rearranged_images):
+            img_group = []
+            if i < len(rearranged_images):
+                img_group.append(rearranged_images[i])
+            if i + 1 < len(rearranged_images):
+                img_group.append(rearranged_images[i + 1])
+            
+            if img_group:
+                draw_two_images_in_a5(canvas_obj=c, 
+                                    img_paths=img_group, 
+                                    x_offset=right_x, 
+                                    y_offset=0, 
+                                    a5_width=a5_width, 
+                                    a5_height=a5_height)
+                processed_count = len(img_group)
+                img_names = [os.path.basename(img) if img else "空" for img in img_group]
+                print(f"进度：第 {page_count} 页右侧A5 → 已添加图片：{img_names}")
+                i += processed_count
+            else:
+                i += 1
 
-    # --------------- 第五步：保存PDF文件 ---------------
+    # --------------- 第六步：保存PDF文件 ---------------
     c.save()
     print(f"\n✅ PDF生成完成！")
     print(f"📁 输出路径：{os.path.abspath(output_pdf)}")
@@ -107,6 +146,9 @@ def draw_two_images_in_a5(canvas_obj, img_paths, x_offset, y_offset, a5_width, a
     half_height = a5_height / 2
     
     for idx, img_path in enumerate(img_paths[:2]):  # 最多处理两张图片
+        if img_path is None:
+            continue
+            
         with Image.open(img_path) as img:
             img_w, img_h = img.size
 
