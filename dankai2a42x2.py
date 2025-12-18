@@ -127,12 +127,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         page_side = pdf_page_index % 2  # 0=正面, 1=反面
         sheet_index = pdf_page_index // 2  # 当前A4纸的索引
         
-        if page_side == 0:  # 正面：左侧A5区域放背面内容，右侧A5区域放正面内容
-            back_a5_x, back_a5_y = 0, 0           # 左侧A5区域（背面内容）
-            front_a5_x, front_a5_y = a5_width, 0  # 右侧A5区域（正面内容）
-        else:  # 反面：左侧A5区域放正面内容，右侧A5区域放背面内容
-            front_a5_x, front_a5_y = 0, 0        # 左侧A5区域（正面内容）
-            back_a5_x, back_a5_y = a5_width, 0   # 右侧A5区域（背面内容）
+        front_a5_x, front_a5_y = 0, 0        # 左侧A5区域（正面内容）
+        back_a5_x, back_a5_y = a5_width, 0
             
         
         a5lindex = (pdf_page_index // 2 ) *4 + A5_SEQ_MAP[page_side*2]
