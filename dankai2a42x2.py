@@ -21,7 +21,7 @@ IMAGE_MODE_AUTO = "auto"            # 自动检测
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
 A5_IMAGES_2 = 2  # 每个A5页面2张图片（上下排列）
 A5_IMAGES_4 = 4  # 每个A5页面4张图片（2x2排列）
-
+A5_SEQ_MAP=[4,1,2,3]
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4        # 当前每个A5页面的图片数量
@@ -133,14 +133,18 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         else:  # 反面：左侧A5区域放正面内容，右侧A5区域放背面内容
             front_a5_x, front_a5_y = 0, 0        # 左侧A5区域（正面内容）
             back_a5_x, back_a5_y = a5_width, 0   # 右侧A5区域（背面内容）
+            
         
+        a5lindex = (pdf_page_index // 2 ) *4 + A5_SEQ_MAP[page_side*2]
+        a5rindex = (pdf_page_index // 2 ) *4 + A5_SEQ_MAP[page_side*2+1]
         # 根据配置绘制图片
         if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
-            # 每个A5区域1张图片
+            # 每个A5区域1张图片  
+           
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                a5_index=0 + page_side * 2,  # 正面A5区域索引
+                a5_index= a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
                 a5_width=a5_width,
@@ -152,7 +156,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                a5_index=1 + page_side * 2,  # 背面A5区域索引
+                a5_index=a5rindex,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
                 a5_width=a5_width,
@@ -166,7 +170,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                a5_index=0 + page_side * 2,  # 正面A5区域索引
+                a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
                 a5_width=a5_width,
@@ -178,7 +182,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                a5_index=1 + page_side * 2,  # 背面A5区域索引
+                a5_index=a5rindex,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
                 a5_width=a5_width,
@@ -192,7 +196,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                a5_index=0 + page_side * 2,  # 正面A5区域索引
+                a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
                 a5_width=a5_width,
@@ -204,7 +208,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                a5_index=1 + page_side * 2,  # 背面A5区域索引
+                a5_index=a5rindex,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
                 a5_width=a5_width,
@@ -243,9 +247,9 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
         # 每个A5区域1张图片
-        img_index = pdf_page_index * images_per_pdf_page + a5_index
+        img_index = a5_index - 1
         img_path = image_files[img_index] if img_index < len(image_files) else None
-        page_number = img_index + 1 if img_path else None
+        page_number = a5_index if img_path else None
         
         if img_path and os.path.exists(img_path):
             with Image.open(img_path) as img:
@@ -293,12 +297,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
         page_numbers = []
         
         # 计算当前A5区域对应的图片索引
-        base_index = pdf_page_index * images_per_pdf_page + a5_index * 2
+        base_index = (a5_index - 1) * 2 
         for i in range(2):
             img_index = base_index + i
             img_path = image_files[img_index] if img_index < len(image_files) else None
             img_paths.append(img_path)
-            page_numbers.append(img_index + 1 if img_path else None)
+            page_numbers.append(img_index if img_path else None)
         
         # 每个小图片区域的尺寸（上下排列）
         small_width = a5_width
@@ -335,21 +339,21 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
                     preserveAspectRatio=True
                 )
             
-            # 添加页码（如果提供了页码）
-            if page_num is not None:
-                # 设置字体和大小
-                canvas_obj.setFont("Helvetica", 10)
-                # 设置字体颜色为黑色
-                canvas_obj.setFillColorRGB(0, 0, 0)
+            # # 添加页码（如果提供了页码）
+            # if page_num is not None:
+            #     # 设置字体和大小
+            #     canvas_obj.setFont("Helvetica", 10)
+            #     # 设置字体颜色为黑色
+            #     canvas_obj.setFillColorRGB(0, 0, 0)
                 
-                page_number_text = str(page_num)
-                text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 10)
+            #     page_number_text = str(page_num)
+            #     text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 10)
                 
-                # 页码放在每个小图片的右下角
-                page_x = x_offset + pos[0] + small_width - text_width - 5
-                page_y = y_offset + pos[1] + 5
+            #     # 页码放在每个小图片的右下角
+            #     page_x = x_offset + pos[0] + small_width - text_width - 5
+            #     page_y = y_offset + pos[1] + 5
                 
-                canvas_obj.drawString(page_x, page_y, page_number_text)
+            #     canvas_obj.drawString(page_x, page_y, page_number_text)
                 
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_4:
         # 每个A5区域4张图片（2x2排列）
@@ -357,7 +361,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
         page_numbers = []
         
         # 计算当前A5区域对应的图片索引
-        base_index = pdf_page_index * images_per_pdf_page + a5_index * 4
+        base_index = (a5_index - 1) * 4
         for i in range(4):
             img_index = base_index + i
             img_path = image_files[img_index] if img_index < len(image_files) else None
