@@ -78,7 +78,9 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # 计算需要的总PDF页面数
     total_images = len(image_files)
     images_per_pdf_page = CURRENT_A5_IMAGE_COUNT * 2  # 每页PDF包含两个A5区域的图片
-    total_pdf_pages_needed = (total_images + images_per_pdf_page - 1) // images_per_pdf_page
+    
+    need_A4_pages = (total_images + CURRENT_A5_IMAGE_COUNT*4 -1 ) // (CURRENT_A5_IMAGE_COUNT*4)
+    total_pdf_pages_needed = need_A4_pages*2
     
     print(f"配置信息：")
     print(f"  - 图片模式: {CURRENT_IMAGE_MODE}")
@@ -105,15 +107,15 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # 迭代PDF页面而不是图片
     for pdf_page_index in range(total_pdf_pages_needed):
         # 检查当前PDF页面是否有内容
-        has_content = False
-        for i in range(images_per_pdf_page):
-            img_index = pdf_page_index * images_per_pdf_page + i
-            if img_index < len(image_files):
-                has_content = True
-                break
+        # has_content = False
+        # for i in range(images_per_pdf_page):
+        #     img_index = pdf_page_index * images_per_pdf_page + i
+        #     if img_index < len(image_files):
+        #         has_content = True
+        #         break
         
-        if not has_content:
-            continue
+        # if not has_content:
+        #     continue
             
         # 新页面（第一页无需showPage，后续页面需要）
         if not first_page:
