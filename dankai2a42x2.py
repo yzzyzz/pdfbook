@@ -16,6 +16,7 @@ import util
 IMAGE_MODE_LANDSCAPE = "landscape"  # 横版图片
 IMAGE_MODE_PORTRAIT = "portrait"    # 竖版图片
 IMAGE_MODE_AUTO = "auto"            # 自动检测
+img_scale = 0.96
 
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
@@ -388,8 +389,8 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
                 scale_h = small_height / img_h
                 scale = min(scale_w, scale_h)
                 
-                scaled_w = img_w * scale
-                scaled_h = img_h * scale
+                scaled_w = img_w * scale * img_scale
+                scaled_h = img_h * scale * img_scale
                 
                 # 在小区域内居中
                 x = x_offset + pos[0] + (small_width - scaled_w) / 2
