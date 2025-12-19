@@ -394,6 +394,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 # 如果没有有效图片，创建默认分辨率图像
                 high_res_width = int(a5_width * 4)  # 4倍于PDF页面的分辨率
                 high_res_height = int(a5_height * 4)
+                return
             else:
                 # 使用第一张图片的4倍分辨率
                 base_width, base_height = base_resolution
