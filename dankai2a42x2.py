@@ -8,27 +8,30 @@ from reportlab.lib.units import mm
 from PIL import Image
 import os
 import sys
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
 
 # ==================== 配置常量 ====================
 # 原始图片模式
 IMAGE_MODE_LANDSCAPE = "landscape"  # 横版图片
-IMAGE_MODE_PORTRAIT = "portrait"    # 竖版图片
-IMAGE_MODE_AUTO = "auto"            # 自动检测
-img_scale = 0.98                    # 图片缩放
+IMAGE_MODE_PORTRAIT = "portrait"  # 竖版图片
+IMAGE_MODE_AUTO = "auto"  # 自动检测
+img_scale = 0.98  # 图片缩放
 
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
 A5_IMAGES_2 = 2  # 每个A5页面2张图片（上下排列）
 A5_IMAGES_4 = 4  # 每个A5页面4张图片（2x2排列）
-A5_SEQ_MAP=[4,1,2,3]
+A5_SEQ_MAP = [4, 1, 2, 3]
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
-CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4      # 当前每个A5页面的图片数量
-print_page_index = False
+CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
+print_page_index = True
+
 #  zhuangding_papge_size = 1
 # ==================== 主要逻辑 ====================
+
 
 def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     """
@@ -41,27 +44,29 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # 检查图片文件夹是否存在
     if not os.path.isdir(image_folder):
         raise ValueError(f"错误：图片文件夹 '{image_folder}' 不存在或不是有效目录！")
-    
+
     # 检查输出PDF路径的父目录是否存在（不存在则创建）
     output_dir = os.path.dirname(output_pdf)
     if output_dir and not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
         print(f"提示：已自动创建输出目录 '{output_dir}'")
-    
+
     # --------------- 第二步：筛选有效图片 ---------------
     # 支持的图片格式（可根据需要扩展）
-    valid_image_ext = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp', '.webp')
+    valid_image_ext = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp',
+                       '.webp')
     # 遍历文件夹，筛选图片文件并按文件名排序
     image_files = []
     for filename in os.listdir(image_folder):
         file_path = os.path.join(image_folder, filename)
         # 跳过目录，只处理文件
-        if os.path.isfile(file_path) and filename.lower().endswith(valid_image_ext):
+        if os.path.isfile(file_path) and filename.lower().endswith(
+                valid_image_ext):
             image_files.append(file_path)
-    
+
     # 按文件名自然排序（保证图片顺序可控）
     image_files.sort(key=lambda x: os.path.basename(x))
-    
+
     # 检查是否有有效图片
     if not image_files:
         raise RuntimeError(f"错误：文件夹 '{image_folder}' 中未找到任何有效图片！")
@@ -72,17 +77,18 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     images_per_a5 = CURRENT_A5_IMAGE_COUNT
     a5_regions_per_a4_sheet = 4  # 每张A4纸有4个A5区域
     images_per_a4_sheet = images_per_a5 * a5_regions_per_a4_sheet
-    
+
     # 每张A4纸生成的PDF页面数
     pdf_pages_per_a4_sheet = 2  # 正面和反面
-    
+
     # 计算需要的总PDF页面数
     total_images = len(image_files)
     images_per_pdf_page = CURRENT_A5_IMAGE_COUNT * 2  # 每页PDF包含两个A5区域的图片
-    
-    need_A4_pages = (total_images + CURRENT_A5_IMAGE_COUNT*4 -1 ) // (CURRENT_A5_IMAGE_COUNT*4)
-    total_pdf_pages_needed = need_A4_pages*2
-    
+
+    need_A4_pages = (total_images + CURRENT_A5_IMAGE_COUNT * 4 -
+                     1) // (CURRENT_A5_IMAGE_COUNT * 4)
+    total_pdf_pages_needed = need_A4_pages * 2
+
     print(f"配置信息：")
     print(f"  - 图片模式: {CURRENT_IMAGE_MODE}")
     print(f"  - 每个A5页面图片数: {images_per_a5}")
@@ -96,7 +102,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     landscape_pagesize = landscape(pagesize)  # 横向A4: 297mm x 210mm
     c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
     page_width, page_height = landscape_pagesize  # 获取页面尺寸（单位：点，1点=1/72英寸）
-    
+
     # A5区域尺寸（每个A5区域是A4页面的一半）
     a5_width = page_width / 2
     a5_height = page_height
@@ -104,7 +110,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # --------------- 第五步：处理每页PDF并添加到PDF ---------------
     total_sheet_count = 0
     first_page = True
-    
+
     # 迭代PDF页面而不是图片
     for pdf_page_index in range(total_pdf_pages_needed):
         # 检查当前PDF页面是否有内容
@@ -114,44 +120,42 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         #     if img_index < len(image_files):
         #         has_content = True
         #         break
-        
+
         # if not has_content:
         #     continue
-            
+
         # 新页面（第一页无需showPage，后续页面需要）
         if not first_page:
             c.showPage()
         else:
             first_page = False
-        
+
         total_sheet_count += 1
-        
+
         # 确定当前页面的A5区域位置
         page_side = pdf_page_index % 2  # 0=正面, 1=反面
         sheet_index = pdf_page_index // 2  # 当前A4纸的索引
-        
-        front_a5_x, front_a5_y = 0, 0        # 左侧A5区域（正面内容）
+
+        front_a5_x, front_a5_y = 0, 0  # 左侧A5区域（正面内容）
         back_a5_x, back_a5_y = a5_width, 0
-            
-        
-        a5lindex = (pdf_page_index // 2 ) *4 + A5_SEQ_MAP[page_side*2]
-        a5rindex = (pdf_page_index // 2 ) *4 + A5_SEQ_MAP[page_side*2+1]
+
+        a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
+        a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
         # 根据配置绘制图片
         if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
-            # 每个A5区域1张图片  
-           
+            # 每个A5区域1张图片
+
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                a5_index= a5lindex,  # 正面A5区域索引
+                a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
                 a5_width=a5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page
-            )
-            
+                images_per_pdf_page=images_per_pdf_page)
+
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
@@ -161,9 +165,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_width=a5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page
-            )
-            
+                images_per_pdf_page=images_per_pdf_page)
+
         elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
             # 每个A5区域2张图片（上下排列）
             draw_images_in_a5_region(
@@ -175,9 +178,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_width=a5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page
-            )
-            
+                images_per_pdf_page=images_per_pdf_page)
+
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
@@ -187,9 +189,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_width=a5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page
-            )
-            
+                images_per_pdf_page=images_per_pdf_page)
+
         elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_4:
             # 每个A5区域4张图片（2x2排列）
             draw_images_in_a5_region(
@@ -201,9 +202,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_width=a5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page
-            )
-            
+                images_per_pdf_page=images_per_pdf_page)
+
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
@@ -213,10 +213,11 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_width=a5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page
-            )
-        
-        print(f"进度：第 {total_sheet_count} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}")
+                images_per_pdf_page=images_per_pdf_page)
+
+        print(
+            f"进度：第 {total_sheet_count} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
+        )
 
     # --------------- 第六步：保存PDF文件 ---------------
     c.save()
@@ -228,9 +229,13 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     print(f"   2. 每页PDF包含{images_per_pdf_page}张图片")
     print(f"   3. 打印完成后对折装订成A5册子")
 
+
 # ==================== 绘图函数 ====================
 
-def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offset, a5_width, a5_height, pdf_page_index, images_per_pdf_page):
+
+def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
+                             y_offset, a5_width, a5_height, pdf_page_index,
+                             images_per_pdf_page):
     """
     在指定的A5区域内绘制图片，根据配置自动选择绘制方式
     :param canvas_obj: PDF画布对象
@@ -247,9 +252,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
         # 每个A5区域1张图片
         img_index = a5_index - 1
-        img_path = image_files[img_index] if img_index < len(image_files) else None
+        img_path = image_files[img_index] if img_index < len(
+            image_files) else None
         page_number = a5_index if img_path else None
-        
+
         if img_path and os.path.exists(img_path):
             with Image.open(img_path) as img:
                 img_w, img_h = img.size
@@ -258,62 +264,65 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
             scale_w = a5_width / img_w
             scale_h = a5_height / img_h
             scale = min(scale_w, scale_h)
-            
+
             scaled_w = img_w * scale
             scaled_h = img_h * scale
-            
+
             # 在A5区域内居中
             x = x_offset + (a5_width - scaled_w) / 2
             y = y_offset + (a5_height - scaled_h) / 2
 
-            canvas_obj.drawImage(
-                img_path,
-                x=x, y=y,
-                width=scaled_w,
-                height=scaled_h,
-                preserveAspectRatio=True
-            )
-        
+            canvas_obj.drawImage(img_path,
+                                 x=x,
+                                 y=y,
+                                 width=scaled_w,
+                                 height=scaled_h,
+                                 preserveAspectRatio=True)
+
         # 添加页码（如果提供了页码）
         if page_number is not None and print_page_index:
             # 设置字体和大小
             canvas_obj.setFont("Helvetica", 12)
             # 设置字体颜色为黑色
             canvas_obj.setFillColorRGB(0, 0, 0)
-            
+
             page_number_text = str(page_number)
-            text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 12)
-            
+            text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
+                                                12)
+
             # 页码放在A5区域的右下角
             page_x = x_offset + a5_width - text_width - 10
             page_y = y_offset + 10
-            
+
             canvas_obj.drawString(page_x, page_y, page_number_text)
-            
+
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
         # 每个A5区域2张图片（上下排列）
         img_paths = []
         page_numbers = []
-        
+
         # 计算当前A5区域对应的图片索引
-        base_index = (a5_index - 1) * 2 
+        base_index = (a5_index - 1) * 2
         for i in range(2):
             img_index = base_index + i
-            img_path = image_files[img_index] if img_index < len(image_files) else None
+            img_path = image_files[img_index] if img_index < len(
+                image_files) else None
             img_paths.append(img_path)
             page_numbers.append(img_index if img_path else None)
-        
+
         # 每个小图片区域的尺寸（上下排列）
         small_width = a5_width
         small_height = a5_height / 2
-        
+
         # 上下排列的位置
         positions = [
             (0, small_height),  # 上半部分
-            (0, 0)             # 下半部分
+            (0, 0)  # 下半部分
         ]
-        
-        for i, (img_path, pos, page_num) in enumerate(zip(img_paths, positions, page_numbers)):
+
+        for i, (img_path, pos,
+                page_num) in enumerate(zip(img_paths, positions,
+                                           page_numbers)):
             if img_path and os.path.exists(img_path):
                 with Image.open(img_path) as img:
                     img_w, img_h = img.size
@@ -322,103 +331,164 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
                 scale_w = small_width / img_w
                 scale_h = small_height / img_h
                 scale = min(scale_w, scale_h)
-                
+
                 scaled_w = img_w * scale
                 scaled_h = img_h * scale
-                
+
                 # 在小区域内居中
                 x = x_offset + pos[0] + (small_width - scaled_w) / 2
                 y = y_offset + pos[1] + (small_height - scaled_h) / 2
 
-                canvas_obj.drawImage(
-                    img_path,
-                    x=x, y=y,
-                    width=scaled_w,
-                    height=scaled_h,
-                    preserveAspectRatio=True
-                )
-            
+                canvas_obj.drawImage(img_path,
+                                     x=x,
+                                     y=y,
+                                     width=scaled_w,
+                                     height=scaled_h,
+                                     preserveAspectRatio=True)
+
             # # 添加页码（如果提供了页码）
             # if page_num is not None:
             #     # 设置字体和大小
             #     canvas_obj.setFont("Helvetica", 10)
             #     # 设置字体颜色为黑色
             #     canvas_obj.setFillColorRGB(0, 0, 0)
-                
+
             #     page_number_text = str(page_num)
             #     text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 10)
-                
+
             #     # 页码放在每个小图片的右下角
             #     page_x = x_offset + pos[0] + small_width - text_width - 5
             #     page_y = y_offset + pos[1] + 5
-                
+
             #     canvas_obj.drawString(page_x, page_y, page_number_text)
-                
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_4:
-        # 每个A5区域4张图片（2x2排列）
+        # 每个A5区域4张图片（2x2排列）- 使用第一张图片的4倍分辨率
         img_paths = []
         page_numbers = []
-        
+
         # 计算当前A5区域对应的图片索引
         base_index = (a5_index - 1) * 4
         for i in range(4):
             img_index = base_index + i
-            img_path = image_files[img_index] if img_index < len(image_files) else None
+            img_path = image_files[img_index] if img_index < len(
+                image_files) else None
             img_paths.append(img_path)
             page_numbers.append(img_index + 1 if img_path else None)
-        
-        # 每个小图片区域的尺寸（2x2网格）
-        small_width = a5_width / 2
-        small_height = a5_height / 2
-        
-        # 2x2排列的位置（从上到下，从左到右）
-        positions = [
-            (0, small_height),          # 左上
-            (small_width, small_height), # 右上
-            (0, 0),                     # 左下
-            (small_width, 0)            # 右下
-        ]
-        
-        for i, (img_path, pos, page_num) in enumerate(zip(img_paths, positions, page_numbers)):
-            if img_path and os.path.exists(img_path):
-                with Image.open(img_path) as img:
-                    img_w, img_h = img.size
 
-                # 计算缩放比例（填满小区域）
-                scale_w = small_width / img_w
-                scale_h = small_height / img_h
-                scale = min(scale_w, scale_h)
-                
-                scaled_w = img_w * scale * img_scale
-                scaled_h = img_h * scale * img_scale
-                
-                # 在小区域内居中
-                x = x_offset + pos[0] + (small_width - scaled_w) / 2
-                y = y_offset + pos[1] + (small_height - scaled_h) / 2
-
-                canvas_obj.drawImage(
-                    img_path,
-                    x=x, y=y,
-                    width=scaled_w,
-                    height=scaled_h,
-                    preserveAspectRatio=True
-                )
+        print(page_numbers)
+        # 创建一个临时的空白图像用于拼接
+        composite_img_path = None
+        try:
+            # 使用第一张有效图片的分辨率作为基准，创建4倍分辨率的图像
+            base_resolution = None
+            for img_path in img_paths:
+                if img_path and os.path.exists(img_path):
+                    with Image.open(img_path) as img:
+                        base_resolution = (img.width, img.height)
+                    break
             
-            # 添加页码（如果提供了页码）
-            if page_num is not None and print_page_index:
-                # 设置字体和大小
-                canvas_obj.setFont("Helvetica", 8)
-                # 设置字体颜色为黑色
-                canvas_obj.setFillColorRGB(0, 0, 0)
-                
-                page_number_text = str(page_num)
-                text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 8)
-                
-                # 页码放在每个小图片的左下角
-                page_x = x_offset + pos[0] + small_width - 14
-                page_y = y_offset + pos[1] + 2
-                
-                canvas_obj.drawString(page_x, page_y, page_number_text)
+            if base_resolution is None:
+                # 如果没有有效图片，创建默认分辨率图像
+                high_res_width = int(a5_width * 4)  # 4倍于PDF页面的分辨率
+                high_res_height = int(a5_height * 4)
+            else:
+                # 使用第一张图片的4倍分辨率
+                base_width, base_height = base_resolution
+                high_res_width = base_width * 2  # 2倍宽度以适应A5区域
+                high_res_height = base_height * 2  # 2倍高度以适应A5区域
+            print(f"高分辨率目标图像尺寸：{high_res_width}x{high_res_height}")
+            # 创建高分辨率目标图像（A5大小）
+            target_img = Image.new('RGB', (high_res_width, high_res_height),
+                                (255, 255, 255))
+
+            # 每个小图片区域的尺寸（2x2网格）- 高分辨率版本
+            small_width = high_res_width // 2
+            small_height = high_res_height // 2
+
+            # 2x2排列的位置（从上到下，从左到右）
+            positions = [
+                (0, 0),  # 左下
+                (small_width, 0),  # 右下
+                (0, small_height),  # 左上
+                (small_width, small_height)  # 右上
+            ]
+
+            # 将4张图片拼接到目标图像上，并在每张图上添加页码
+            for i, (img_path, pos, page_num) in enumerate(
+                    zip(img_paths, positions, page_numbers)):
+                if img_path and os.path.exists(img_path):
+                    with Image.open(img_path) as img:
+                        print(f"处理图片 {img_path}，页码 {page_num}")
+                        # 调整图片大小以适应小区域
+                        scale_w = small_width / img.width
+                        scale_h = small_height / img.height
+                        scale = min(scale_w, scale_h)
+
+                        scaled_w = int(img.width * scale * img_scale)
+                        scaled_h = int(img.height * scale * img_scale)
+
+                        # 居中调整
+                        offset_x = pos[0] + (small_width - scaled_w) // 2
+                        offset_y = pos[1] + (small_height - scaled_h) // 2
+
+                        # 调整图片大小并粘贴到目标图像
+                        resized_img = img.resize((scaled_w, scaled_h),
+                                                Image.Resampling.LANCZOS)
+                        target_img.paste(resized_img, (offset_x, offset_y))
+
+                        # 如果启用了页码显示，在拼接的图像上绘制页码
+                        if page_num is not None and print_page_index:
+                            from PIL import ImageDraw, ImageFont
+                            draw = ImageDraw.Draw(target_img)
+
+                            # 根据高分辨率调整字体大小
+                            font_size = max(16, small_height // 20)  # 动态调整字体大小
+                            
+                            # 尝试使用默认字体，如果不可用则使用默认字体
+                            try:
+                                # 在某些系统上可能需要调整字体路径
+                                font = ImageFont.truetype("arial.ttf", font_size)
+                            except:
+                                try:
+                                    font = ImageFont.truetype(
+                                        "DejaVuSans.ttf", font_size)
+                                except:
+                                    font = ImageFont.load_default()
+
+                            # 页码放在每个小图片的右下角（根据高分辨率调整位置）
+                            page_number_text = str(page_num)
+                            text_x = offset_x + scaled_w - font_size
+                            text_y = offset_y + font_size // 2
+
+                            # 绘制文字（黑色）
+                            draw.text((text_x, text_y),
+                                    page_number_text,
+                                    fill=(0, 0, 0),
+                                    font=font)
+
+            # 保存合成图像到临时文件
+            temp_img_path = f"temp_composite_{a5_index}.jpg"
+            target_img.save(temp_img_path, 'JPEG', quality=100)
+            composite_img_path = temp_img_path
+
+            # 在A5区域内绘制合成的图像（自动缩放以适应A5区域）
+            canvas_obj.drawImage(composite_img_path,
+                                x=x_offset,
+                                y=y_offset,
+                                width=a5_width,
+                                height=a5_height,
+                                preserveAspectRatio=True)
+
+            # 清理资源
+            target_img.close()
+
+        except Exception as e:
+            print(f"警告：创建复合图像时出错 {e}")
+        finally:
+            pass
+            # 删除临时文件
+            # if composite_img_path and os.path.exists(composite_img_path):
+            #     os.remove(composite_img_path)
 
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
@@ -429,11 +499,11 @@ if __name__ == "__main__":
         print("示例：")
         print(f"python {os.path.basename(__file__)} ./images ./output.pdf")
         sys.exit(1)
-    
+
     # 获取命令行参数
     input_folder = sys.argv[1]
     output_file = sys.argv[2]
-    
+
     # 执行PDF生成
     try:
         generate_pdf_from_images(input_folder, output_file)
