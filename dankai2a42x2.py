@@ -16,7 +16,7 @@ import util
 IMAGE_MODE_LANDSCAPE = "landscape"  # 横版图片
 IMAGE_MODE_PORTRAIT = "portrait"    # 竖版图片
 IMAGE_MODE_AUTO = "auto"            # 自动检测
-img_scale = 0.96
+img_scale = 0.98
 
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
