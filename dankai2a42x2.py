@@ -442,8 +442,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                             draw = ImageDraw.Draw(target_img)
 
                             # 根据高分辨率调整字体大小
-                            font_size = max(16, small_height // 40)  
-                            print(f"字体大小：{font_size}")# 动态调整字体大小
+                            font_size = max(16, small_height // 50)  
 
                             # 尝试使用默认字体，如果不可用则使用默认字体
                             try:
