@@ -8,10 +8,71 @@ from reportlab.lib.units import mm
 from PIL import Image
 import os
 import sys
+from PIL import Image,ImageDraw,ImageFont
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
 
+
+def is_landscape_image(image_path):
+    """
+    判断图片是否为横图
+    :param image_path: 图片路径
+    :return: True表示横图，False表示竖图或正方形图
+    """
+    try:
+        with Image.open(image_path) as img:
+            return img.width > img.height
+    except Exception as e:
+        print(f"无法读取图片 {image_path}: {e}")
+        return False
+
+def split_landscape_to_portrait(image_path, output_prefix="split"):
+    """
+    将横图分割为两张竖图
+    :param image_path: 原始横图路径
+    :param output_prefix: 输出文件前缀
+    :return: 两个分割后的图片路径
+    """
+    try:
+        # 创建临时目录
+        temp_dir = "temp_split_images"
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        with Image.open(image_path) as img:
+            # 确保图片是RGB模式，以便可以保存为PNG
+            if img.mode in ('P', 'PA'):
+                # P模式(调色板)和PA模式(带alpha通道的调色板)需要特殊处理
+                img = img.convert('RGBA') if 'transparency' in img.info else img.convert('RGB')
+            elif img.mode == 'RGBA' or img.mode == 'RGB':
+                # 已经是合适的模式
+                pass
+            else:
+                # 其他模式统一转换为RGB
+                img = img.convert('RGB')
+                
+            width, height = img.size
+            # 计算分割点（中间位置）
+            mid_point = width // 2
+            # 左半部分
+            left_box = (0, 0, mid_point, height)
+            left_img = img.crop(left_box)
+            # 生成唯一的临时文件名
+            base_name = os.path.splitext(os.path.basename(image_path))[0]
+            left_path = os.path.join(temp_dir, f"{base_name}_left_temp.png")
+            left_img.save(left_path, 'PNG')
+            # 右半部分
+            right_box = (mid_point, 0, width, height)
+            right_img = img.crop(right_box)
+            right_path = os.path.join(temp_dir, f"{base_name}_right_temp.png")
+            right_img.save(right_path, 'PNG')
+            return left_path, right_path
+    except Exception as e:
+        print(f"分割图片时出错 {image_path}: {e}")
+        return None, None
+
+
+    
 # ==================== 配置常量 ====================
 # 原始图片模式
 IMAGE_MODE_LANDSCAPE = "landscape"  # 横版图片
@@ -26,7 +87,7 @@ A5_IMAGES_4 = 4  # 每个A5页面4张图片（2x2排列）
 A5_SEQ_MAP = [4, 1, 2, 3]
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
-CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
+CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 2
 CLIP_PADDING = 4
 
@@ -102,7 +163,32 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # 检查是否有有效图片
     if not image_files:
         raise RuntimeError(f"错误：文件夹 '{image_folder}' 中未找到任何有效图片！")
+    
+    # 重新组织图片：
+    # 如果是 A5_IMAGES_1 或者 A5_IMAGES_4 ，如果原始图片里面有横图，则将图片分割为2张竖图
+    if CURRENT_A5_IMAGE_COUNT in [A5_IMAGES_1, A5_IMAGES_4]:
+        print("检查并处理横图...")
+        i = 0
+        while i < len(image_files):
+            img_path = image_files[i]
+            if is_landscape_image(img_path):
+                # 如果是横图，分割为两张竖图
+                left_path, right_path = split_landscape_to_portrait(img_path)
+                if left_path and right_path:
+                    # 用分割后的两张图片替换原图
+                    image_files[i:i+1] = [left_path, right_path]
+                    i += 2  # 跳过新增的两张图片
+                    print(f"已将横图 {os.path.basename(img_path)} 分割为两张竖图")
+                else:
+                    # 如果分割失败，保留原图
+                    i += 1
+            else:
+                # 竖图直接跳过
+                i += 1
+
+
     print(f"提示：共找到 {len(image_files)} 张有效图片")
+    
 
     # --------------- 第三步：计算分组大小 ---------------
     # 根据配置计算每张A4纸包含的图片数量
@@ -449,7 +535,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
             # 绘制分割线
             if LINE_WIDTH > 0:
-                from PIL import ImageDraw
                 draw = ImageDraw.Draw(target_img)
 
                 # 绘制垂直分割线
@@ -487,7 +572,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
                         # 如果启用了页码显示，在拼接的图像上绘制页码
                         if page_num is not None and print_page_index:
-                            from PIL import ImageDraw, ImageFont
                             draw = ImageDraw.Draw(target_img)
 
                             # 根据高分辨率调整字体大小
