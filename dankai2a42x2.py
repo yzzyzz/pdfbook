@@ -442,7 +442,8 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                             draw = ImageDraw.Draw(target_img)
 
                             # 根据高分辨率调整字体大小
-                            font_size = max(16, small_height // 20)  # 动态调整字体大小
+                            font_size = max(16, small_height // 40)  
+                            print(f"字体大小：{font_size}")# 动态调整字体大小
 
                             # 尝试使用默认字体，如果不可用则使用默认字体
                             try:
@@ -454,9 +455,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                                     font = ImageFont.truetype(
                                         "DejaVuSans.ttf", font_size)
                                 except:
-                                    font = ImageFont.load_default()
+                                    font = ImageFont.load_default(font_size)
 
                             # 页码放在每个小图片的右下角（根据高分辨率调整位置）
+                            
                             page_number_text = str(page_num)
                             text_x = offset_x + scaled_w - font_size
                             text_y = offset_y + font_size // 2
