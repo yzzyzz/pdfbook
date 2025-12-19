@@ -386,7 +386,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                     with Image.open(img_path) as img:
                         base_resolution = (img.width, img.height)
                     break
-            
+
             if base_resolution is None:
                 # 如果没有有效图片，创建默认分辨率图像
                 high_res_width = int(a5_width * 4)  # 4倍于PDF页面的分辨率
@@ -399,7 +399,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             print(f"高分辨率目标图像尺寸：{high_res_width}x{high_res_height}")
             # 创建高分辨率目标图像（A5大小）
             target_img = Image.new('RGB', (high_res_width, high_res_height),
-                                (255, 255, 255))
+                                   (255, 255, 255))
 
             # 每个小图片区域的尺寸（2x2网格）- 高分辨率版本
             small_width = high_res_width // 2
@@ -424,8 +424,8 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                         scale_h = small_height / img.height
                         scale = min(scale_w, scale_h)
 
-                        scaled_w = int(img.width * scale * img_scale)
-                        scaled_h = int(img.height * scale * img_scale)
+                        scaled_w = int(img.width * scale)
+                        scaled_h = int(img.height * scale)
 
                         # 居中调整
                         offset_x = pos[0] + (small_width - scaled_w) // 2
@@ -433,7 +433,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
                         # 调整图片大小并粘贴到目标图像
                         resized_img = img.resize((scaled_w, scaled_h),
-                                                Image.Resampling.LANCZOS)
+                                                 Image.Resampling.LANCZOS)
                         target_img.paste(resized_img, (offset_x, offset_y))
 
                         # 如果启用了页码显示，在拼接的图像上绘制页码
@@ -443,11 +443,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
                             # 根据高分辨率调整字体大小
                             font_size = max(16, small_height // 20)  # 动态调整字体大小
-                            
+
                             # 尝试使用默认字体，如果不可用则使用默认字体
                             try:
                                 # 在某些系统上可能需要调整字体路径
-                                font = ImageFont.truetype("arial.ttf", font_size)
+                                font = ImageFont.truetype(
+                                    "arial.ttf", font_size)
                             except:
                                 try:
                                     font = ImageFont.truetype(
@@ -462,9 +463,9 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
                             # 绘制文字（黑色）
                             draw.text((text_x, text_y),
-                                    page_number_text,
-                                    fill=(0, 0, 0),
-                                    font=font)
+                                      page_number_text,
+                                      fill=(0, 0, 0),
+                                      font=font)
 
             # 保存合成图像到临时文件
             temp_img_path = f"temp_composite_{a5_index}.jpg"
@@ -473,11 +474,11 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
             # 在A5区域内绘制合成的图像（自动缩放以适应A5区域）
             canvas_obj.drawImage(composite_img_path,
-                                x=x_offset,
-                                y=y_offset,
-                                width=a5_width,
-                                height=a5_height,
-                                preserveAspectRatio=True)
+                                 x=x_offset,
+                                 y=y_offset,
+                                 width=a5_width,
+                                 height=a5_height,
+                                 preserveAspectRatio=True)
 
             # 清理资源
             target_img.close()
@@ -489,6 +490,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             # 删除临时文件
             if composite_img_path and os.path.exists(composite_img_path):
                 os.remove(composite_img_path)
+
 
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
