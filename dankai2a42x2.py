@@ -26,7 +26,7 @@ A5_SEQ_MAP=[4,1,2,3]
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4      # 当前每个A5页面的图片数量
-
+print_page_index = False
 #  zhuangding_papge_size = 1
 # ==================== 主要逻辑 ====================
 
@@ -275,7 +275,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
             )
         
         # 添加页码（如果提供了页码）
-        if page_number is not None:
+        if page_number is not None and print_page_index:
             # 设置字体和大小
             canvas_obj.setFont("Helvetica", 12)
             # 设置字体颜色为黑色
@@ -405,7 +405,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset, y_offs
                 )
             
             # 添加页码（如果提供了页码）
-            if page_num is not None:
+            if page_num is not None and print_page_index:
                 # 设置字体和大小
                 canvas_obj.setFont("Helvetica", 8)
                 # 设置字体颜色为黑色
