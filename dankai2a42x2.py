@@ -485,10 +485,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         except Exception as e:
             print(f"警告：创建复合图像时出错 {e}")
         finally:
-            pass
+            # pass
             # 删除临时文件
-            # if composite_img_path and os.path.exists(composite_img_path):
-            #     os.remove(composite_img_path)
+            if composite_img_path and os.path.exists(composite_img_path):
+                os.remove(composite_img_path)
 
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
