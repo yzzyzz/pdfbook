@@ -28,6 +28,8 @@ A5_SEQ_MAP = [4, 1, 2, 3]
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
 LINE_WIDTH = 2
+CLIP_PADDING = 2
+
 print_page_index = True
 
 #  zhuangding_papge_size = 1
@@ -138,21 +140,20 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         sheet_index = pdf_page_index // 2  # 当前A4纸的索引
 
         front_a5_x, front_a5_y = 0, 0  # 左侧A5区域（正面内容）
-        back_a5_x, back_a5_y = a5_width, 0
+        back_a5_x, back_a5_y = a5_width + 2 * CLIP_PADDING, 0
 
         a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
         a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
         # 根据配置绘制图片
         if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
             # 每个A5区域1张图片
-
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
                 a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
-                a5_width=a5_width,
+                a5_width=a5_width - CLIP_PADDING,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
@@ -163,7 +164,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_index=a5rindex,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
-                a5_width=a5_width,
+                a5_width=a5_width - CLIP_PADDING,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
@@ -176,7 +177,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
-                a5_width=a5_width,
+                a5_width=a5_width - CLIP_PADDING,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
@@ -187,7 +188,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_index=a5rindex,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
-                a5_width=a5_width,
+                a5_width=a5_width - CLIP_PADDING,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
@@ -200,7 +201,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
-                a5_width=a5_width,
+                a5_width=a5_width - CLIP_PADDING,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
@@ -211,7 +212,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_index=a5rindex,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
-                a5_width=a5_width,
+                a5_width=a5_width - CLIP_PADDING,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
