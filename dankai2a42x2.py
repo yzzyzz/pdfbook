@@ -71,7 +71,6 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
         print(f"分割图片时出错 {image_path}: {e}")
         return None, None
 
-
     
 # ==================== 配置常量 ====================
 # 原始图片模式
@@ -90,6 +89,7 @@ CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 2
 CLIP_PADDING = 4
+PRE_NONE = 2
 
 print_page_index = True
 
@@ -189,6 +189,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 
     print(f"提示：共找到 {len(image_files)} 张有效图片")
     
+    # 前面补None，方便后续处理
+    image_files = [None] * PRE_NONE + image_files
 
     # --------------- 第三步：计算分组大小 ---------------
     # 根据配置计算每张A4纸包含的图片数量
@@ -405,7 +407,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             # 设置字体颜色为黑色
             canvas_obj.setFillColorRGB(0, 0, 0)
 
-            page_number_text = str(page_number)
+            page_number_text = str(page_number - PRE_NONE)
             text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
                                                 12)
 
