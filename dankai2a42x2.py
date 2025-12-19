@@ -446,21 +446,16 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
                             # 尝试使用默认字体，如果不可用则使用默认字体
                             try:
-                                # 在某些系统上可能需要调整字体路径
                                 font = ImageFont.truetype(
-                                    "arial.ttf", font_size)
+                                    "DejaVuSans.ttf", font_size)
                             except:
-                                try:
-                                    font = ImageFont.truetype(
-                                        "DejaVuSans.ttf", font_size)
-                                except:
-                                    font = ImageFont.load_default(font_size)
+                                font = ImageFont.load_default(font_size)
 
                             # 页码放在每个小图片的右下角（根据高分辨率调整位置）
                             
                             page_number_text = str(page_num)
-                            text_x = offset_x + scaled_w - font_size
-                            text_y = offset_y + font_size // 2
+                            text_x = offset_x + scaled_w - font_size*2
+                            text_y = offset_y + scaled_h - font_size*2
 
                             # 绘制文字（黑色）
                             draw.text((text_x, text_y),
