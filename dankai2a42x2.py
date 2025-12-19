@@ -55,7 +55,7 @@ def draw_center_divider_line(canvas_obj, page_width, page_height):
     canvas_obj.setLineWidth(clip_line_width)
 
     # 计算中心线的X坐标（在两个A5区域之间）
-    center_x = page_width / 2 - clip_line_width / 2  # 考虑了CLIP_PADDING的偏移
+    center_x = page_width / 2 - clip_line_width // 2  # 考虑了CLIP_PADDING的偏移
 
     # 绘制垂直虚线
     canvas_obj.line(center_x, 0, center_x, page_height)
@@ -171,7 +171,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         sheet_index = pdf_page_index // 2  # 当前A4纸的索引
 
         front_a5_x, front_a5_y = 0, 0  # 左侧A5区域（正面内容）
-        back_a5_x, back_a5_y = a5_width + 2 * CLIP_PADDING, 0
+        back_a5_x, back_a5_y = a5_width + CLIP_PADDING, 0
 
         a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
         a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
