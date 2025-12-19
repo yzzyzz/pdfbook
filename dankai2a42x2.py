@@ -470,8 +470,9 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                                       font=font)
 
             # 保存合成图像到临时文件
-            temp_img_path = f"temp_composite_{a5_index}.jpg"
-            target_img.save(temp_img_path, 'JPEG', quality=100)
+            # 保存合成图像到临时文件（使用无损PNG格式）
+            temp_img_path = f"temp_composite_{a5_index}.png"  # 从.jpg改为.png
+            target_img.save(temp_img_path, 'PNG')  # 从'JPEG'改为'PNG'
             composite_img_path = temp_img_path
 
             # 在A5区域内绘制合成的图像（自动缩放以适应A5区域）
