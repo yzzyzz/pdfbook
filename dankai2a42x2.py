@@ -27,6 +27,7 @@ A5_SEQ_MAP = [4, 1, 2, 3]
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
+LINE_WIDTH = 1
 print_page_index = True
 
 #  zhuangding_papge_size = 1
@@ -361,6 +362,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             #     page_y = y_offset + pos[1] + 5
 
             #     canvas_obj.drawString(page_x, page_y, page_number_text)
+
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_4:
         # 每个A5区域4张图片（2x2排列）- 使用第一张图片的4倍分辨率
         img_paths = []
@@ -394,24 +396,42 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             else:
                 # 使用第一张图片的4倍分辨率
                 base_width, base_height = base_resolution
-                high_res_width = base_width * 2  # 2倍宽度以适应A5区域
-                high_res_height = base_height * 2  # 2倍高度以适应A5区域
-            print(f"高分辨率目标图像尺寸：{high_res_width}x{high_res_height}")
+                high_res_width = base_width * 2 + LINE_WIDTH  # 2倍宽度以适应A5区域
+                high_res_height = base_height * 2 + LINE_WIDTH  # 2倍高度以适应A5区域
             # 创建高分辨率目标图像（A5大小）
             target_img = Image.new('RGB', (high_res_width, high_res_height),
-                                   (255, 255, 255))
+                                (255, 255, 255))
 
             # 每个小图片区域的尺寸（2x2网格）- 高分辨率版本
-            small_width = high_res_width // 2
-            small_height = high_res_height // 2
+            small_width = base_width
+            small_height = base_height
 
             # 2x2排列的位置（从上到下，从左到右）
             positions = [
                 (0, 0),  # 左下
-                (small_width, 0),  # 右下
-                (0, small_height),  # 左上
-                (small_width, small_height)  # 右上
+                (small_width + LINE_WIDTH, 0),  # 右下
+                (0, small_height + LINE_WIDTH),  # 左上
+                (small_width + LINE_WIDTH, small_height + LINE_WIDTH)  # 右上
             ]
+
+            # 绘制分割线
+            if LINE_WIDTH > 0:
+                from PIL import ImageDraw
+                draw = ImageDraw.Draw(target_img)
+                
+                # 绘制垂直分割线
+                draw.line(
+                    [(small_width, 0), (small_width, high_res_height)],
+                    fill=(0, 0, 0),
+                    width=LINE_WIDTH
+                )
+                
+                # 绘制水平分割线
+                draw.line(
+                    [(0, small_height), (high_res_width, small_height)],
+                    fill=(0, 0, 0),
+                    width=LINE_WIDTH
+                )
 
             # 将4张图片拼接到目标图像上，并在每张图上添加页码
             for i, (img_path, pos, page_num) in enumerate(
@@ -433,7 +453,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
                         # 调整图片大小并粘贴到目标图像
                         resized_img = img.resize((scaled_w, scaled_h),
-                                                 Image.Resampling.LANCZOS)
+                                                Image.Resampling.LANCZOS)
                         target_img.paste(resized_img, (offset_x, offset_y))
 
                         # 如果启用了页码显示，在拼接的图像上绘制页码
@@ -459,9 +479,9 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
                             # 绘制文字（黑色）
                             draw.text((text_x, text_y),
-                                      page_number_text,
-                                      fill=(0, 0, 0),
-                                      font=font)
+                                    page_number_text,
+                                    fill=(0, 0, 0),
+                                    font=font)
 
             # 保存合成图像到临时文件
             # 保存合成图像到临时文件（使用无损PNG格式）
@@ -471,11 +491,11 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
             # 在A5区域内绘制合成的图像（自动缩放以适应A5区域）
             canvas_obj.drawImage(composite_img_path,
-                                 x=x_offset,
-                                 y=y_offset,
-                                 width=a5_width,
-                                 height=a5_height,
-                                 preserveAspectRatio=True)
+                                x=x_offset,
+                                y=y_offset,
+                                width=a5_width,
+                                height=a5_height,
+                                preserveAspectRatio=True)
 
             # 清理资源
             target_img.close()
@@ -487,8 +507,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             # 删除临时文件
             if composite_img_path and os.path.exists(composite_img_path):
                 os.remove(composite_img_path)
-
-
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
     # 检查命令行参数数量
