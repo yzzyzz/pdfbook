@@ -28,7 +28,7 @@ A5_SEQ_MAP = [4, 1, 2, 3]
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 2
-CLIP_PADDING = 2
+CLIP_PADDING = 4
 
 print_page_index = True
 
