@@ -36,6 +36,35 @@ print_page_index = True
 # ==================== 主要逻辑 ====================
 
 
+# 在页面中央绘制一条黑色虚线，分隔两个A5区域
+def draw_center_divider_line(canvas_obj, page_width, page_height):
+    """
+    在页面中央绘制一条黑色虚线，用于分隔两个A5区域
+    :param canvas_obj: PDF画布对象
+    :param page_width: 页面宽度
+    :param page_height: 页面高度
+    """
+    # 设置线条样式为虚线
+    canvas_obj.setDash(5, 3)  # 5点实线，3点间隔
+
+    # 设置线条颜色为黑色
+    canvas_obj.setStrokeColorRGB(0, 0, 0)
+
+    # 设置线条宽度
+    clip_line_width = 1
+    canvas_obj.setLineWidth(clip_line_width)
+
+    # 计算中心线的X坐标（在两个A5区域之间）
+    center_x = page_width / 2 - clip_line_width / 2  # 考虑了CLIP_PADDING的偏移
+
+    # 绘制垂直虚线
+    canvas_obj.line(center_x, 0, center_x, page_height)
+
+    # 重置线条样式为实线
+    canvas_obj.setDash()
+
+
+# 在适当的位置调用这个函数
 def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     """
     基于reportlab生成适合打印成册的PDF文件（4合一漫画模式）
@@ -134,6 +163,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             first_page = False
 
         total_sheet_count += 1
+
+        draw_center_divider_line(c, page_width, page_height)
 
         # 确定当前页面的A5区域位置
         page_side = pdf_page_index % 2  # 0=正面, 1=反面
