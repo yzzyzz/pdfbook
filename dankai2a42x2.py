@@ -80,7 +80,7 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
 IMAGE_MODE_LANDSCAPE = "landscape"  # 横版图片
 IMAGE_MODE_PORTRAIT = "portrait"  # 竖版图片
 IMAGE_MODE_AUTO = "auto"  # 自动检测
-fold_mode = 1  # 1、内边缘粘胶 2、外边缘粘胶，内边缘裁剪
+fold_mode = 2  # 1、内边缘粘胶 2、外边缘粘胶，内边缘裁剪
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
 A5_IMAGES_2 = 2  # 每个A5页面2张图片（上下排列）
@@ -97,6 +97,10 @@ CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 2
 CLIP_PADDING = 18
+
+lr_padding = 10
+center_padding = 4
+
 PRE_NONE = 0
 
 print_page_index = True
@@ -241,16 +245,6 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # 迭代PDF页面而不是图片
     for pdf_page_index in range(total_pdf_pages_needed):
         # 检查当前PDF页面是否有内容
-        # has_content = False
-        # for i in range(images_per_pdf_page):
-        #     img_index = pdf_page_index * images_per_pdf_page + i
-        #     if img_index < len(image_files):
-        #         has_content = True
-        #         break
-
-        # if not has_content:
-        #     continue
-
         # 新页面（第一页无需showPage，后续页面需要）
         if not first_page:
             c.showPage()
@@ -265,8 +259,15 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         page_side = pdf_page_index % 2  # 0=正面, 1=反面
         sheet_index = pdf_page_index // 2  # 当前A4纸的索引
 
-        front_a5_x, front_a5_y = 0, 0  # 左侧A5区域（正面内容）
-        back_a5_x, back_a5_y = a5_width + CLIP_PADDING, 0
+        aa5_width = 0
+        if fold_mode == 1:
+            front_a5_x, front_a5_y = 0, 0  # 左侧A5区域（正面内容）
+            back_a5_x, back_a5_y = a5_width + center_padding, 0
+            aa5_width = a5_width - center_padding
+        else:
+            front_a5_x, front_a5_y = lr_padding, 0  # 左侧A5区域（正面内容）
+            back_a5_x, back_a5_y = a5_width + center_padding, 0
+            aa5_width = a5_width - lr_padding - center_padding
 
         a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
         a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
@@ -279,7 +280,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
-                a5_width=a5_width - CLIP_PADDING,
+                a5_width=aa5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
@@ -290,7 +291,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
                 a5_index=a5rindex,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
-                a5_width=a5_width - CLIP_PADDING,
+                a5_width=aa5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
@@ -417,7 +418,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             page_number_text = str(page_number - PRE_NONE)
             text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
                                                 9)
-            
+
             if fold_mode == 1:
                 if a5_index % 2 == 1:
                     page_x = x_offset + 12
@@ -430,7 +431,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 # 页码放在A5区域的右下角
                 else:
                     page_x = x_offset + a5_width - text_width - 12
-            page_y = y_offset + 4
+            page_y = y_offset + 2
             canvas_obj.drawString(page_x, page_y, page_number_text)
 
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
