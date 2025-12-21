@@ -80,8 +80,7 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
 IMAGE_MODE_LANDSCAPE = "landscape"  # 横版图片
 IMAGE_MODE_PORTRAIT = "portrait"  # 竖版图片
 IMAGE_MODE_AUTO = "auto"  # 自动检测
-img_scale = 0.98  # 图片缩放
-
+fold_mode = 1  # 1、内边缘粘胶 2、外边缘粘胶，内边缘裁剪
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
 A5_IMAGES_2 = 2  # 每个A5页面2张图片（上下排列）
