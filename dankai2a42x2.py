@@ -413,9 +413,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             page_number_text = str(page_number - PRE_NONE)
             text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
                                                 9)
-
+            
+            if a5_index % 2 == 1:
+                page_x = x_offset + 12
             # 页码放在A5区域的右下角
-            page_x = x_offset + a5_width - text_width - 10
+            else:
+                page_x = x_offset + a5_width - text_width - 12
             page_y = y_offset + 4
 
             canvas_obj.drawString(page_x, page_y, page_number_text)
