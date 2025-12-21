@@ -86,7 +86,8 @@ img_scale = 0.98  # 图片缩放
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
 A5_IMAGES_2 = 2  # 每个A5页面2张图片（上下排列）
 A5_IMAGES_4 = 4  # 每个A5页面4张图片（2x2排列）
-A5_SEQ_MAP = [4, 1, 2, 3]
+# A5_SEQ_MAP = [4, 1, 2, 3]  # 左侧开始翻页
+A5_SEQ_MAP = [1, 4, 3, 2] # 右侧开始翻页
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
