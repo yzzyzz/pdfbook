@@ -407,17 +407,17 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         # 添加页码（如果提供了页码）
         if page_number is not None and print_page_index:
             # 设置字体和大小
-            canvas_obj.setFont("Helvetica", 12)
+            canvas_obj.setFont("Helvetica", 9)
             # 设置字体颜色为黑色
             canvas_obj.setFillColorRGB(0, 0, 0)
 
             page_number_text = str(page_number - PRE_NONE)
             text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
-                                                12)
+                                                9)
 
             # 页码放在A5区域的右下角
             page_x = x_offset + a5_width - text_width - 10
-            page_y = y_offset + 10
+            page_y = y_offset + 4
 
             canvas_obj.drawString(page_x, page_y, page_number_text)
 
