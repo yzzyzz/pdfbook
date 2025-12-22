@@ -95,17 +95,12 @@ else:
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
-CLIP_PADDING = 18
 
 lr_padding = 6
 center_padding = 4
 PRE_NONE = 0
 
 print_page_index = False
-
-#  zhuangding_papge_size = 1
-# ==================== 主要逻辑 ====================
-
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
@@ -126,8 +121,7 @@ def draw_center_divider_line(canvas_obj, page_width, page_height):
     canvas_obj.setLineWidth(clip_line_width)
 
     # 计算中心线的X坐标（在两个A5区域之间）
-    center_x = page_width / 2 - clip_line_width // 2  # 考虑了CLIP_PADDING的偏移
-
+    center_x = page_width / 2 - clip_line_width // 2 
     # 绘制垂直虚线
     canvas_obj.line(center_x, 0, center_x, page_height)
 
