@@ -365,10 +365,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                     page_x = x_offset + a5_width - text_width - 12
             else:
                 if a5_index % 2 == 1:
-                    page_x = x_offset + 12
+                    page_x = x_offset + 8 + center_padding
                 # 页码放在A5区域的右下角
                 else:
-                    page_x = x_offset + a5_width - text_width - 12
+                    page_x = x_offset + a5_width - text_width - 8 - center_padding
             page_y = y_offset + 2
             canvas_obj.drawString(page_x, page_y, page_number_text)
 
