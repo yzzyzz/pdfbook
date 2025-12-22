@@ -99,7 +99,7 @@ LINE_WIDTH = 2
 CLIP_PADDING = 18
 
 lr_padding = 10
-center_padding = 4
+center_padding = 6
 
 PRE_NONE = 0
 
