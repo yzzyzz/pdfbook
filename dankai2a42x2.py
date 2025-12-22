@@ -259,91 +259,33 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         page_side = pdf_page_index % 2  # 0=正面, 1=反面
         sheet_index = pdf_page_index // 2  # 当前A4纸的索引
 
-        aa5_width = 0
-        if fold_mode == 1:
-            front_a5_x, front_a5_y = 0, 0  # 左侧A5区域（正面内容）
-            back_a5_x, back_a5_y = a5_width + center_padding, 0
-            aa5_width = a5_width - center_padding
-        else:
-            front_a5_x, front_a5_y = lr_padding, 0  # 左侧A5区域（正面内容）
-            back_a5_x, back_a5_y = a5_width + center_padding, 0
-            aa5_width = a5_width - lr_padding - center_padding
+        front_a5_x, front_a5_y = 0, 0
+        back_a5_x, back_a5_y = a5_width, 0
 
         a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
         a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
         # 根据配置绘制图片
-        if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
-            # 每个A5区域1张图片
-            draw_images_in_a5_region(
+        draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
                 a5_index=a5lindex,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
-                a5_width=aa5_width,
+                a5_width=a5_width,
                 a5_height=a5_height,
                 pdf_page_index=pdf_page_index,
                 images_per_pdf_page=images_per_pdf_page)
 
-            draw_images_in_a5_region(
-                canvas_obj=c,
-                image_files=image_files,
-                a5_index=a5rindex,  # 背面A5区域索引
-                x_offset=back_a5_x,
-                y_offset=back_a5_y,
-                a5_width=aa5_width,
-                a5_height=a5_height,
-                pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page)
-
-        elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
-            # 每个A5区域2张图片（上下排列）
-            draw_images_in_a5_region(
-                canvas_obj=c,
-                image_files=image_files,
-                a5_index=a5lindex,  # 正面A5区域索引
-                x_offset=front_a5_x,
-                y_offset=front_a5_y,
-                a5_width=a5_width - CLIP_PADDING,
-                a5_height=a5_height,
-                pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page)
-
-            draw_images_in_a5_region(
-                canvas_obj=c,
-                image_files=image_files,
-                a5_index=a5rindex,  # 背面A5区域索引
-                x_offset=back_a5_x,
-                y_offset=back_a5_y,
-                a5_width=a5_width - CLIP_PADDING,
-                a5_height=a5_height,
-                pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page)
-
-        elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_4:
-            # 每个A5区域4张图片（2x2排列）
-            draw_images_in_a5_region(
-                canvas_obj=c,
-                image_files=image_files,
-                a5_index=a5lindex,  # 正面A5区域索引
-                x_offset=front_a5_x,
-                y_offset=front_a5_y,
-                a5_width=a5_width - CLIP_PADDING,
-                a5_height=a5_height,
-                pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page)
-
-            draw_images_in_a5_region(
-                canvas_obj=c,
-                image_files=image_files,
-                a5_index=a5rindex,  # 背面A5区域索引
-                x_offset=back_a5_x,
-                y_offset=back_a5_y,
-                a5_width=a5_width - CLIP_PADDING,
-                a5_height=a5_height,
-                pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page)
-
+        draw_images_in_a5_region(
+            canvas_obj=c,
+            image_files=image_files,
+            a5_index=a5rindex,  # 背面A5区域索引
+            x_offset=back_a5_x,
+            y_offset=back_a5_y,
+            a5_width=a5_width,
+            a5_height=a5_height,
+            pdf_page_index=pdf_page_index,
+            images_per_pdf_page=images_per_pdf_page)
         print(
             f"进度：第 {total_sheet_count} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
         )
