@@ -13,7 +13,6 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
 
-
 def is_landscape_image(image_path):
     """
     判断图片是否为横图
@@ -94,7 +93,7 @@ else:
 
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
-CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
+CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
 CLIP_PADDING = 18
 
@@ -103,7 +102,6 @@ center_padding = 4
 PRE_NONE = 0
 
 print_page_index = False
-
 
 #  zhuangding_papge_size = 1
 # ==================== 主要逻辑 ====================
@@ -332,15 +330,21 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 img_w, img_h = img.size
 
             # 计算缩放比例（填满A5区域）
-            scale_w = a5_width / img_w
+            scale_w = (a5_width - lr_padding - center_padding) / img_w
             scale_h = a5_height / img_h
             scale = min(scale_w, scale_h)
 
             scaled_w = img_w * scale
             scaled_h = img_h * scale
-
-            # 在A5区域内居中
-            x = x_offset + (a5_width - scaled_w) / 2
+            
+            if a5_index % 2 == 1:
+                # 背面A5区域，图片向右偏移
+                x = x_offset +  (a5_width - lr_padding - center_padding - scaled_w) / 2 + center_padding
+            else:
+                # 正面A5区域，图片向左偏移
+                x = x_offset +  (a5_width - lr_padding - center_padding - scaled_w) / 2 + lr_padding
+            
+            print(f"a5_width: {a5_width}, lr_padding: {lr_padding}, center_padding: {center_padding}, scaled_w: {scaled_w}, x_offset: {x_offset}, x: {x}")
             y = y_offset + (a5_height - scaled_h) / 2
 
             canvas_obj.drawImage(img_path,
