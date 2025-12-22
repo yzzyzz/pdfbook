@@ -68,7 +68,7 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
             right_img = img.crop(right_box)
             right_path = os.path.join(temp_dir, f"{base_name}_right_temp.png")
             right_img.save(right_path, 'PNG')
-            return left_path, right_path
+            return right_path, left_path
     except Exception as e:
         print(f"分割图片时出错 {image_path}: {e}")
         return None, None
