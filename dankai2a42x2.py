@@ -515,131 +515,75 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             page_numbers.append(img_index + 1 if img_path else None)
 
         print(page_numbers)
-        # 创建一个临时的空白图像用于拼接
-        composite_img_path = None
-        try:
-            # 使用第一张有效图片的分辨率作为基准，创建4倍分辨率的图像
-            base_resolution = None
-            for img_path in img_paths:
-                if img_path and os.path.exists(img_path):
-                    with Image.open(img_path) as img:
-                        base_resolution = (img.width, img.height)
-                    break
+        # 每个小图片区域的尺寸（2x2网格）
+        small_width = (a5_width - lr_padding - center_padding) / 2
+        small_height = (a5_height) / 2
+        
+        # 2x2排列的位置（从左到右，从下到上）
+        positions = [
+            (lr_padding, 0),  # 左下
+            (small_width + lr_padding, 0),  # 右下
+            (lr_padding, small_height),  # 左上
+            (small_width + lr_padding, small_height)  # 右上
+        ]
+        
+        # 绘制4张图片
+        for i, (img_path, pos, page_num) in enumerate(
+                zip(img_paths, positions, page_numbers)):
+            if img_path and os.path.exists(img_path):
+                with Image.open(img_path) as img:
+                    img_w, img_h = img.size
 
-            if base_resolution is None:
-                # 如果没有有效图片，创建默认分辨率图像
-                high_res_width = int(a5_width * 4)  # 4倍于PDF页面的分辨率
-                high_res_height = int(a5_height * 4)
-                return
-            else:
-                # 使用第一张图片的4倍分辨率
-                base_width, base_height = base_resolution
-                high_res_width = base_width * 2 + LINE_WIDTH  # 2倍宽度以适应A5区域
-                high_res_height = base_height * 2 + LINE_WIDTH  # 2倍高度以适应A5区域
-            # 创建高分辨率目标图像（A5大小）
-            target_img = Image.new('RGB', (high_res_width, high_res_height),
-                                   (255, 255, 255))
+                # 计算缩放比例（填满小区域）
+                scale_w = small_width / img_w
+                scale_h = small_height / img_h
+                scale = min(scale_w, scale_h)
 
-            # 每个小图片区域的尺寸（2x2网格）- 高分辨率版本
-            small_width = base_width
-            small_height = base_height
+                scaled_w = img_w * scale
+                scaled_h = img_h * scale
 
-            # 2x2排列的位置（从上到下，从左到右）
-            positions = [
-                (0, 0),  # 左下
-                (small_width + LINE_WIDTH, 0),  # 右下
-                (0, small_height + LINE_WIDTH),  # 左上
-                (small_width + LINE_WIDTH, small_height + LINE_WIDTH)  # 右上
-            ]
+                # 在小区域内居中
+                x = x_offset + pos[0] + (small_width - scaled_w) / 2
+                y = y_offset + pos[1] + (small_height - scaled_h) / 2
 
-            # 绘制分割线
-            if LINE_WIDTH > 0:
-                draw = ImageDraw.Draw(target_img)
+                canvas_obj.drawImage(img_path,
+                                     x=x,
+                                     y=y,
+                                     width=scaled_w,
+                                     height=scaled_h,
+                                     preserveAspectRatio=True)
 
-                # 绘制垂直分割线
-                draw.line([(small_width, 0), (small_width, high_res_height)],
-                          fill=(0, 0, 0),
-                          width=LINE_WIDTH)
+                # 添加页码（如果提供了页码）
+                if page_num is not None and print_page_index:
+                    # 设置字体和大小
+                    canvas_obj.setFont("Helvetica", 8)
+                    # 设置字体颜色为黑色
+                    canvas_obj.setFillColorRGB(0, 0, 0)
 
-                # 绘制水平分割线
-                draw.line([(0, small_height), (high_res_width, small_height)],
-                          fill=(0, 0, 0),
-                          width=LINE_WIDTH)
+                    page_number_text = str(page_num)
+                    text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 8)
 
-            # 将4张图片拼接到目标图像上，并在每张图上添加页码
-            for i, (img_path, pos, page_num) in enumerate(
-                    zip(img_paths, positions, page_numbers)):
-                if img_path and os.path.exists(img_path):
-                    with Image.open(img_path) as img:
-                        print(f"处理图片 {img_path}，页码 {page_num}")
-                        # 调整图片大小以适应小区域
-                        scale_w = small_width / img.width
-                        scale_h = small_height / img.height
-                        scale = min(scale_w, scale_h)
+                    # 页码放在每个小图片的右下角
+                    page_x = x_offset + pos[0] + small_width - text_width - 3
+                    page_y = y_offset + pos[1] + 3
 
-                        scaled_w = int(img.width * scale)
-                        scaled_h = int(img.height * scale)
+                    canvas_obj.drawString(page_x, page_y, page_number_text)
 
-                        # 居中调整
-                        offset_x = pos[0] + (small_width - scaled_w) // 2
-                        offset_y = pos[1] + (small_height - scaled_h) // 2
-
-                        # 调整图片大小并粘贴到目标图像
-                        resized_img = img.resize((scaled_w, scaled_h),
-                                                 Image.Resampling.LANCZOS)
-                        target_img.paste(resized_img, (offset_x, offset_y))
-
-                        # 如果启用了页码显示，在拼接的图像上绘制页码
-                        if page_num is not None and print_page_index:
-                            draw = ImageDraw.Draw(target_img)
-
-                            # 根据高分辨率调整字体大小
-                            font_size = max(16, small_height // 50)
-
-                            # 尝试使用默认字体，如果不可用则使用默认字体
-                            try:
-                                font = ImageFont.truetype(
-                                    "DejaVuSans.ttf", font_size)
-                            except:
-                                font = ImageFont.load_default(font_size)
-
-                            # 页码放在每个小图片的右下角（根据高分辨率调整位置）
-
-                            page_number_text = str(page_num)
-                            text_x = offset_x + scaled_w - font_size * 2
-                            text_y = offset_y + scaled_h - font_size * 2
-
-                            # 绘制文字（黑色）
-                            draw.text((text_x, text_y),
-                                      page_number_text,
-                                      fill=(0, 0, 0),
-                                      font=font)
-
-            # 保存合成图像到临时文件
-            # 保存合成图像到临时文件（使用无损PNG格式）
-            temp_img_path = f"temp_composite_{a5_index}.png"  # 从.jpg改为.png
-            target_img.save(temp_img_path, 'PNG')  # 从'JPEG'改为'PNG'
-            composite_img_path = temp_img_path
-
-            # 在A5区域内绘制合成的图像（自动缩放以适应A5区域）
-            canvas_obj.drawImage(composite_img_path,
-                                 x=x_offset,
-                                 y=y_offset,
-                                 width=a5_width,
-                                 height=a5_height,
-                                 preserveAspectRatio=True)
-
-            # 清理资源
-            target_img.close()
-
-        except Exception as e:
-            print(f"警告：创建复合图像时出错 {e}")
-        finally:
-            # pass
-            # 删除临时文件
-            if composite_img_path and os.path.exists(composite_img_path):
-                os.remove(composite_img_path)
-
+        # 绘制分割线
+        if LINE_WIDTH > 0:
+            # 设置线条颜色为黑色
+            canvas_obj.setStrokeColorRGB(0, 0, 0)
+            # 设置线条宽度
+            canvas_obj.setLineWidth(LINE_WIDTH)
+            
+            # 绘制垂直分割线
+            v_line_x = x_offset + small_width + LINE_WIDTH/2
+            canvas_obj.line(v_line_x, y_offset, v_line_x, y_offset + a5_height)
+            
+            # 绘制水平分割线
+            h_line_y = y_offset + small_height + LINE_WIDTH/2
+            canvas_obj.line(x_offset, h_line_y, x_offset + a5_width, h_line_y)
+        
 
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
