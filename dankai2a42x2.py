@@ -519,14 +519,22 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         small_width = (a5_width - lr_padding - center_padding) / 2
         small_height = (a5_height) / 2
         
-        # 2x2排列的位置（从左到右，从下到上）
-        positions = [
-            (lr_padding, 0),  # 左下
-            (small_width + lr_padding, 0),  # 右下
-            (lr_padding, small_height),  # 左上
-            (small_width + lr_padding, small_height)  # 右上
-        ]
         
+        if a5_index % 2 == 1:
+            positions = [
+                (small_width + lr_padding, small_height),  # 右上
+                (lr_padding, small_height),
+                (small_width + lr_padding, 0),  # 右下
+                (lr_padding, 0),  # 左下
+            ]
+        else:
+            positions = [
+                (small_width + lr_padding, small_height),  # 右上
+                (lr_padding, small_height),
+                (small_width + lr_padding, 0),  # 右下
+                (lr_padding, 0),  # 左下
+            ]
+            
         # 绘制4张图片
         for i, (img_path, pos, page_num) in enumerate(
                 zip(img_paths, positions, page_numbers)):
