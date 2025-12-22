@@ -522,10 +522,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         
         if a5_index % 2 == 1:
             positions = [
-                (small_width + lr_padding, small_height),  # 右上
-                (lr_padding, small_height),
-                (small_width + lr_padding, 0),  # 右下
-                (lr_padding, 0),  # 左下
+                (small_width + center_padding, small_height),  # 右上
+                (center_padding, small_height),
+                (small_width + center_padding, 0),  # 右下
+                (center_padding, 0),  # 左下
             ]
         else:
             positions = [
@@ -585,9 +585,11 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             canvas_obj.setLineWidth(LINE_WIDTH)
             
             # 绘制垂直分割线
-            v_line_x = x_offset + small_width + LINE_WIDTH/2
+            if a5_index % 2 == 1:
+                v_line_x = x_offset + center_padding + small_width - LINE_WIDTH/2
+            else:
+                v_line_x = x_offset + lr_padding + small_width - LINE_WIDTH/2
             canvas_obj.line(v_line_x, y_offset, v_line_x, y_offset + a5_height)
-            
             # 绘制水平分割线
             h_line_y = y_offset + small_height + LINE_WIDTH/2
             canvas_obj.line(x_offset, h_line_y, x_offset + a5_width, h_line_y)
