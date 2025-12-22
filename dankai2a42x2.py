@@ -98,8 +98,8 @@ CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
 CLIP_PADDING = 18
 
-lr_padding = 6
-center_padding = 0
+lr_padding = 10
+center_padding = 4
 PRE_NONE = 0
 
 print_page_index = False
