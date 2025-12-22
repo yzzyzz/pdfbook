@@ -344,7 +344,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 # 正面A5区域，图片向左偏移
                 x = x_offset +  (a5_width - lr_padding - center_padding - scaled_w) / 2 + lr_padding
             
-            print(f"a5_width: {a5_width}, lr_padding: {lr_padding}, center_padding: {center_padding}, scaled_w: {scaled_w}, x_offset: {x_offset}, x: {x}")
             y = y_offset + (a5_height - scaled_h) / 2
 
             canvas_obj.drawImage(img_path,
