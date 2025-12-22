@@ -124,7 +124,7 @@ def draw_center_divider_line(canvas_obj, page_width, page_height):
     canvas_obj.setStrokeColorRGB(0, 0, 0)
 
     # 设置线条宽度
-    clip_line_width = 1
+    clip_line_width = LINE_WIDTH
     canvas_obj.setLineWidth(clip_line_width)
 
     # 计算中心线的X坐标（在两个A5区域之间）
