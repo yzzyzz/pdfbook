@@ -292,4 +292,4 @@ crop_all_white_borders() {
 }
 
 # 调用函数处理图片
-crop_white_borders lbxx lbxx2
+crop_white_borders dst lfz3

@@ -93,13 +93,13 @@ else:
 
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
-CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
+CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
 
-lr_padding = 6
-center_padding = 4
+lr_padding = 11
+center_padding = 10
 PRE_NONE = 0
-print_page_index = False
+print_page_index = True
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
