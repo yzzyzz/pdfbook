@@ -99,7 +99,6 @@ LINE_WIDTH = 1
 lr_padding = 6
 center_padding = 4
 PRE_NONE = 0
-
 print_page_index = False
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
