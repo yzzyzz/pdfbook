@@ -93,7 +93,7 @@ else:
 
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
-CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
+CURRENT_A5_IMAGE_COUNT = A5_IMAGES_4  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
 
 lr_padding = 11
