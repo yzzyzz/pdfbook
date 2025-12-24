@@ -541,7 +541,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
     # 检查命令行参数数量
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print("❌ 参数错误！正确用法：")
         print(f"python {os.path.basename(__file__)} <图片文件夹路径> <输出PDF文件路径>")
         print("示例：")
@@ -551,7 +551,7 @@ if __name__ == "__main__":
     # 获取命令行参数
     input_folder = sys.argv[1]
     output_file = sys.argv[2]
-
+    CURRENT_A5_IMAGE_COUNT = int(sys.argv[3])
     # 执行PDF生成
     try:
         generate_pdf_from_images(input_folder, output_file)
