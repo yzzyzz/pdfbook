@@ -91,17 +91,15 @@ if fold_mode == 1:
 else:
     A5_SEQ_MAP = [4, 1, 2, 3]
 
+print_page_size = A4
 # 当前配置
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
-
 lr_padding = 14
 center_padding = 9
 PRE_NONE = 0
-print_page_index = False
-
-
+print_page_index = True
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
     """
@@ -554,7 +552,7 @@ if __name__ == "__main__":
     CURRENT_A5_IMAGE_COUNT = int(sys.argv[3])
     # 执行PDF生成
     try:
-        generate_pdf_from_images(input_folder, output_file)
+        generate_pdf_from_images(input_folder, output_file, print_page_size)
     except Exception as e:
         print(f"\n❌ 生成失败：{str(e)}")
         sys.exit(1)
