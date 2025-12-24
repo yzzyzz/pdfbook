@@ -510,7 +510,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                     text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 8)
 
                     # 页码放在每个小图片的右下角
-                    page_x = x_offset + pos[0] + small_width - text_width - 3
+                    
+                    if a5_index % 2 == 1:
+                        page_x = x_offset + pos[0] + 5
+                    else:
+                        page_x = x_offset + pos[0] + small_width - text_width - 5
+                        
                     page_y = y_offset + pos[1] + 3
 
                     canvas_obj.drawString(page_x, page_y, page_number_text)

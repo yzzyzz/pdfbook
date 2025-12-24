@@ -292,4 +292,4 @@ crop_all_white_borders() {
 }
 
 # 调用函数处理图片
-crop_white_borders dst fzg3
+crop_white_borders $1 $2
