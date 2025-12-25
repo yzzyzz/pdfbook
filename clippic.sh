@@ -51,7 +51,7 @@ crop_white_borders() {
                 # 使用ImageMagick裁剪掉上下纯白部分，保存为PNG格式
                 # -trim 裁剪边缘的相同颜色
                 # -fuzz 5% 容忍轻微的颜色差异
-                if magick "$file" -fuzz 44% -trim +repage PNG:"$output_file"; then
+                if magick "$file" -fuzz 20% -trim +repage PNG:"$output_file"; then
                     echo "  ✓ 处理成功: $filename -> ${basename}.png"
                     ((processed_count++))
                 else
