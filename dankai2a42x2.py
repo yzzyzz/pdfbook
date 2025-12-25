@@ -99,7 +99,7 @@ LINE_WIDTH = 1
 lr_padding = 14
 center_padding = 9
 PRE_NONE = 0
-print_page_index = False
+print_page_index = True
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
     """
