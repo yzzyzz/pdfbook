@@ -16,7 +16,6 @@ function splitpic() {
         return 1
     fi
 
-
     # 创建目标目录
     mkdir -p "$dst_dir"
 
@@ -41,43 +40,56 @@ function splitpic() {
                 
                 echo "正在处理: $filename"
 
-                # 获取图片宽度
+                # 获取图片尺寸
                 local width=$(identify -format "%w" "$img_file")
-                local half_width=$((width / 2))
-
-                # 分割图片为左右两部分，输出为PNG格式
-                local left_part="${dst_dir}/${filename_no_ext}-2.png"
-                local right_part="${dst_dir}/${filename_no_ext}-1.png"
-                # 分割图片
-                convert "$img_file" -crop ${half_width}x+0+0 +repage "${dst_dir}/temp_left.png"
-                convert "$img_file" -crop ${half_width}x+${half_width}+0 +repage "${dst_dir}/temp_right.png"
-                # 使用magick命令移除白色边缘并保存为PNG格式
-                if magick "${dst_dir}/temp_left.png" \
-                    -fuzz "$fuzz_value" \
-                    -trim \
-                    +repage \
-                    PNG:"$left_part"; then
-                    echo "左半部分处理成功: $left_part"
+                local height=$(identify -format "%h" "$img_file")
+                
+                # 判断是横图还是竖图（宽度大于高度为横图）
+                if [ "$width" -le "$height" ]; then
+                    echo "检测到竖图，仅复制: $filename"
+                    cp "$img_file" "${dst_dir}/${img_file}"
                 else
-                    echo "左半部分处理失败，使用默认输出"
-                    mv "${dst_dir}/temp_left.png" "$left_part"
+                    # 横图进行分割处理
+                    echo "检测到横图，进行分割处理: $filename"
+                    
+                    local half_width=$((width / 2))
+
+                    # 分割图片为左右两部分，输出为PNG格式
+                    local left_part="${dst_dir}/${filename_no_ext}-2.png"
+                    local right_part="${dst_dir}/${filename_no_ext}-1.png"
+                    
+                    # 分割图片
+                    convert "$img_file" -crop ${half_width}x+0+0 +repage "${dst_dir}/temp_left.png"
+                    convert "$img_file" -crop ${half_width}x+${half_width}+0 +repage "${dst_dir}/temp_right.png"
+                    
+                    # 使用magick命令移除白色边缘并保存为PNG格式
+                    if magick "${dst_dir}/temp_left.png" \
+                        -fuzz "$fuzz_value" \
+                        -trim \
+                        +repage \
+                        PNG:"$left_part"; then
+                        echo "左半部分处理成功: $left_part"
+                    else
+                        echo "左半部分处理失败，使用默认输出"
+                        mv "${dst_dir}/temp_left.png" "$left_part"
+                    fi
+
+                    if magick "${dst_dir}/temp_right.png" \
+                        -fuzz "$fuzz_value" \
+                        -trim \
+                        +repage \
+                        PNG:"$right_part"; then
+                        echo "右半部分处理成功: $right_part"
+                    else
+                        echo "右半部分处理失败，使用默认输出"
+                        mv "${dst_dir}/temp_right.png" "$right_part"
+                    fi
+
+                    # 清理临时文件
+                    rm -f "${dst_dir}/temp_left.png" "${dst_dir}/temp_right.png"
                 fi
 
-                if magick "${dst_dir}/temp_right.png" \
-                    -fuzz "$fuzz_value" \
-                    -trim \
-                    +repage \
-                    PNG:"$right_part"; then
-                    echo "右半部分处理成功: $right_part"
-                else
-                    echo "右半部分处理失败，使用默认输出"
-                    mv "${dst_dir}/temp_right.png" "$right_part"
-                fi
-
-                # 清理临时文件
-                rm -f "${dst_dir}/temp_left.png" "${dst_dir}/temp_right.png"
-
-                echo "完成处理: $filename -> ${filename_no_ext}-1.png 和 ${filename_no_ext}-2.png"
+                echo "完成处理: $filename"
             fi
         done
     done
