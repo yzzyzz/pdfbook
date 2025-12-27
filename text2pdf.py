@@ -6,6 +6,17 @@ from reportlab.pdfbase.ttfonts import TTFont
 import os
 import sys
 
+# 尝试导入 PyPDF2 用于合并 PDF
+try:
+    from PyPDF2 import PdfReader, PdfWriter
+except ImportError:
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except ImportError:
+        print("错误：需要安装 PyPDF2 或 pypdf 库来合并PDF文件")
+        print("请运行: pip install PyPDF2 或 pip install pypdf")
+        sys.exit(1)
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
 
@@ -268,21 +279,72 @@ def generate_custom_order_pdfs(text_file_path, front_pdf, back_pdf,
     print(f"📝 从位置 0 到位置 {cursor} 的文本已被处理")
     print(f"📝 原始文本长度: {len(text_content)}, 已处理长度: {cursor}")
     print(f"📄 每个PDF共生成了 {sheet_count} 页")
+    
+    return front_pdf, back_pdf, sheet_count
+
+
+def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
+    """
+    将正面PDF和背面PDF合并成一个PDF，按照一页front，一页back的顺序
+    :param front_pdf: 正面PDF路径
+    :param back_pdf: 背面PDF路径
+    :param output_pdf: 输出合并后的PDF路径
+    """
+    # 读取两个PDF文件
+    front_reader = PdfReader(front_pdf)
+    back_reader = PdfReader(back_pdf)
+    
+    writer = PdfWriter()
+    
+    # 获取两个PDF的页数
+    front_pages = len(front_reader.pages)
+    back_pages = len(back_reader.pages)
+    
+    # 取较小的页数进行合并
+    min_pages = min(front_pages, back_pages)
+    
+    print(f"开始合并PDF，正面{front_pages}页，背面{back_pages}页")
+    
+    # 按照一页front，一页back的顺序合并
+    for i in range(min_pages):
+        # 添加正面页
+        writer.add_page(front_reader.pages[i])
+        # 添加背面页
+        writer.add_page(back_reader.pages[i])
+        print(f"已添加第{i+1}对页面")
+    
+    # 如果正面或背面PDF页数更多，将剩余页面添加到合并后的PDF
+    if front_pages > back_pages:
+        for i in range(back_pages, front_pages):
+            writer.add_page(front_reader.pages[i])
+            print(f"已添加正面PDF的额外页面 {i+1}")
+    elif back_pages > front_pages:
+        for i in range(front_pages, back_pages):
+            writer.add_page(back_reader.pages[i])
+            print(f"已添加背面PDF的额外页面 {i+1}")
+    
+    # 保存合并后的PDF
+    with open(output_pdf, 'wb') as out_file:
+        writer.write(out_file)
+    
+    print(f"✅ PDF合并完成！路径：{os.path.abspath(output_pdf)}")
+    print(f"📄 合并后的PDF共有 {len(writer.pages)} 页")
 
 
 def main():
     if len(sys.argv) < 4:
         print("❌ 参数错误！正确用法：")
         print(
-            f"python {os.path.basename(__file__)} <txt文件路径> <正面PDF路径> <背面PDF路径> [渲染顺序]"
+            f"python {os.path.basename(__file__)} <txt文件路径> <正面PDF路径> <背面PDF路径> [渲染顺序] [合并PDF路径]"
         )
         print("渲染顺序格式：用逗号分隔的'页码-位置'对，例如：0-0,0-1,1-0,1-1,0-2,0-3,1-2,1-3")
         print("页码从0开始（0=正面页，1=背面页），位置从0-3（左上=0，右上=1，左下=2，右下=3）")
         print("示例：")
         print(
-            f"python {os.path.basename(__file__)} ./input.txt ./front.pdf ./back.pdf 0-3,0-0,1-0,1-1,0-2,0-1,1-2,1-3"
+            f"python {os.path.basename(__file__)} ./input.txt ./front.pdf ./back.pdf 0-3,0-0,1-0,1-1,0-2,0-1,1-2,1-3 ./all.pdf"
         )
         print("如不提供渲染顺序，则按默认顺序处理")
+        print("如不提供合并PDF路径，则只生成正面和背面PDF")
         sys.exit(1)
 
     # 获取命令行参数
@@ -294,58 +356,24 @@ def main():
     if not os.path.exists(input_txt_file):
         print(f"❌ 输入文件不存在：{input_txt_file}")
         sys.exit(1)
-
-    # 检查是否提供了渲染顺序
-    if len(sys.argv) >= 5:
-        order_str = sys.argv[4]
-
-        # 解析渲染顺序
-        try:
-            order_parts = order_str.split(',')
-            if len(order_parts) != 8:
-                print(f"❌ 渲染顺序必须包含8个位置，得到 {len(order_parts)} 个")
-                sys.exit(1)
-
-            render_order = []
-            for part in order_parts:
-                page_pos = part.split('-')
-                if len(page_pos) != 2:
-                    print(f"❌ 顺序格式错误：{part}，应为 '页码-位置' 格式")
-                    sys.exit(1)
-
-                page_idx = int(page_pos[0])
-                pos_idx = int(page_pos[1])
-
-                if page_idx < 0 or page_idx > 1:
-                    print(f"❌ 页码必须是0或1，得到：{page_idx}")
-                    sys.exit(1)
-
-                if pos_idx < 0 or pos_idx > 3:
-                    print(f"❌ 位置索引必须在0-3之间，得到：{pos_idx}")
-                    sys.exit(1)
-
-                render_order.append((page_idx, pos_idx))
-
-            # 执行带自定义顺序的PDF生成
-            print("渲染顺序:", render_order)
-            generate_custom_order_pdfs(input_txt_file, front_pdf_file,
-                                       back_pdf_file, render_order)
-
-        except ValueError as e:
-            print(f"❌ 渲染顺序格式错误：{str(e)}")
-            sys.exit(1)
-        except Exception as e:
-            print(f"\n❌ 生成失败：{str(e)}")
-            sys.exit(1)
-    else:
         # 按照可读顺序来搞定 0 1 2 3  4 5 6 7 ->
         # 执行默认顺序的PDF生成
-        render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2),
-                        (0, 3)]
-        generate_custom_order_pdfs(input_txt_file, front_pdf_file,
-                                   back_pdf_file, render_order)
-        pass
-        # generate_interleaved_pdfs(input_txt_file, front_pdf_file, back_pdf_file)
+    render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2),
+                    (0, 3)]
+    
+    # 检查是否提供了合并PDF路径
+    merge_pdf_path = None
+    if len(sys.argv) >= 5:
+        merge_pdf_path = sys.argv[4]
+    print(f"渲染顺序：{render_order}")
+    
+    _, _, sheet_count = generate_custom_order_pdfs(input_txt_file, front_pdf_file,
+                                back_pdf_file, render_order)
+    
+    # 如果提供了合并PDF路径，则合并PDF
+    if merge_pdf_path:
+        merge_front_back_pdfs(front_pdf_file, back_pdf_file, merge_pdf_path)
+    
 
 
 if __name__ == "__main__":
