@@ -77,13 +77,26 @@ def draw_text_in_a6_region_with_cursor(canvas_obj, text, start_cursor, x, y, wid
     line_height = font_size + TEXT_LINE_SPACE
     
     current_cursor = start_cursor
-    chars_processed = 0
     
     # 逐行处理文本直到区域用完或文本处理完毕
     while current_cursor < len(text) and (text_y - line_height) >= (y + margin):
+        # 检查是否是新段落的开始
+        # 检查是否是段落开头（在游标位置之前的前两个字符是'\n\n'，或游标在文本开头）
+        is_paragraph_start = (
+            current_cursor == 0 or  # 文本开头
+            (current_cursor >= 2 and text[current_cursor-2:current_cursor] == '\n\n')  # 段落分隔后
+        )
+        
         # 找到当前行的文本
         line_start = current_cursor
         line_end = line_start
+        
+        # 确定当前行是否需要缩进，计算可用宽度
+        if is_paragraph_start:
+            indent_text = "    "  # 4个空格缩进
+            current_line_available_width = available_width - canvas_obj.stringWidth(indent_text, font_name, font_size)
+        else:
+            current_line_available_width = available_width
         
         # 寻找合适的换行点
         while line_end < len(text):
@@ -94,10 +107,16 @@ def draw_text_in_a6_region_with_cursor(canvas_obj, text, start_cursor, x, y, wid
             
             # 检查当前行的宽度
             test_line = text[line_start:line_end + 1]
+            # 检查是否新段落开始
+            if '\n\n' in test_line and test_line.rindex('\n\n') == len(test_line) - 2:
+                # 如果当前行包含段落结束符，截断到段落结束符
+                line_end = line_start + test_line.rindex('\n\n')
+                break
+            
             line_width = canvas_obj.stringWidth(test_line, font_name, font_size)
             
             # 如果当前行宽度超过可用宽度，回退到上一个合适的断点
-            if line_width > available_width:
+            if line_width > current_line_available_width:
                 if line_end == line_start:
                     # 单个字符就超宽，强制换行
                     line_end += 1
@@ -117,18 +136,32 @@ def draw_text_in_a6_region_with_cursor(canvas_obj, text, start_cursor, x, y, wid
         # 获取当前行文本
         current_line = text[line_start:line_end].rstrip('\n')
         
+        # 检查是否遇到段落分隔符
+        if '\n\n' in current_line:
+            paragraph_end_pos = current_line.index('\n\n')
+            current_line = current_line[:paragraph_end_pos]
+            # 修正游标位置，确保下一次处理从新段落开始
+            actual_end = line_start + paragraph_end_pos + 2  # 加上'\n\n'的长度
+        else:
+            actual_end = line_end
+        
         # 绘制当前行
         if current_line:
-            canvas_obj.drawString(x + margin, text_y - font_size, current_line)
+            if is_paragraph_start:
+                # 第一行添加缩进
+                indented_line = "    " + current_line  # 4个空格缩进
+                canvas_obj.drawString(x + margin, text_y - font_size, indented_line)
+            else:
+                # 非第一行不添加缩进
+                canvas_obj.drawString(x + margin, text_y - font_size, current_line)
         
         # 更新游标和Y坐标
-        current_cursor = line_start + len(current_line)
+        current_cursor = actual_end
         text_y -= line_height
-        chars_processed += len(current_line)
         
-        # 如果当前行以换行符结尾，跳过换行符
-        if current_cursor < len(text) and text[current_cursor] == '\n':
-            current_cursor += 1
+        # 检查是否已经处理完整个文本
+        if current_cursor >= len(text):
+            break
     
     # 返回结束游标和是否还有更多文本
     has_more_text = current_cursor < len(text)
@@ -163,7 +196,6 @@ def generate_pdf_from_text(text_file_path, output_pdf):
         print(f"正在处理第 {page_num} 页...")
         
         # 每页最多4个A6区域
-        regions_filled = 0
         for pos_idx in range(A6_REGIONS_PER_PAGE):
             if not has_more_text:
                 break
@@ -186,8 +218,6 @@ def generate_pdf_from_text(text_file_path, output_pdf):
                 font_name=DEFAULT_FONT
             )
             
-            regions_filled += 1
-        
         # 显示页面并准备下一页
         c.showPage()
         page_num += 1
