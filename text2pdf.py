@@ -5,6 +5,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 import sys
+import re
+
 
 # 尝试导入 PyPDF2 用于合并 PDF
 try:
@@ -58,6 +60,7 @@ def read_text_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
     return content
+
 
 
 def draw_text_in_a6_region_with_cursor(canvas_obj,
@@ -170,15 +173,31 @@ def draw_text_in_a6_region_with_cursor(canvas_obj,
 
         # 绘制当前行
         if current_line:
-            if is_paragraph_start:
-                # 第一行添加缩进
-                indented_line = "    " + current_line  # 4个空格缩进
-                canvas_obj.drawString(x + margin, text_y - font_size,
-                                      indented_line)
+            # 检查是否为章节标题（第x章 或 第x回 开头）
+            chapter_pattern = r'^第[一二三四五六七八九十零\d]+[章节回篇卷].*'
+            if re.match(chapter_pattern, current_line.strip()):
+                # 设置章节标题字体大小
+                title_font_size = 12
+                canvas_obj.setFont(font_name, title_font_size)
+                
+                # 居中显示
+                text_width = canvas_obj.stringWidth(current_line, font_name, title_font_size)
+                center_x = x + (width - text_width) / 2
+                text_y -= line_height
+                canvas_obj.drawString(center_x, text_y - title_font_size, current_line)
+                # 恢复默认字体大小
+                canvas_obj.setFont(font_name, font_size)
             else:
-                # 非第一行不添加缩进
-                canvas_obj.drawString(x + margin, text_y - font_size,
-                                      current_line)
+                # 普通文本处理
+                if is_paragraph_start:
+                    # 第一行添加缩进
+                    indented_line = "    " + current_line  # 4个空格缩进
+                    canvas_obj.drawString(x + margin, text_y - font_size,
+                                          indented_line)
+                else:
+                    # 非第一行不添加缩进
+                    canvas_obj.drawString(x + margin, text_y - font_size,
+                                          current_line)
 
         # 更新游标和Y坐标
         current_cursor = actual_end
@@ -191,7 +210,6 @@ def draw_text_in_a6_region_with_cursor(canvas_obj,
     # 返回结束游标和是否还有更多文本
     has_more_text = current_cursor < len(text)
     return current_cursor, has_more_text
-
 
 def generate_custom_order_pdfs(text_file_path, front_pdf, back_pdf,
                                render_order):
