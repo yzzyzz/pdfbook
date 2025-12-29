@@ -60,7 +60,7 @@ PAGE_WIDTH, PAGE_HEIGHT = A4
 # 每个A6区域尺寸
 A6_WIDTH = PAGE_WIDTH / 2
 A6_HEIGHT = PAGE_HEIGHT / 2
-print("纸张高度:", PAGE_HEIGHT,"纸张宽度:", PAGE_WIDTH)
+print("纸张高度:", PAGE_HEIGHT, "纸张宽度:", PAGE_WIDTH)
 # 文本渲染配置
 TEXT_FONT_SIZE = 12
 TEXT_LINE_SPACE = 3
@@ -123,7 +123,7 @@ def draw_text_in_a6_region_with_cursor(
 
     # 获取当前A6区域的物理位置
     x_offset, y_offset = page_positions[page_idx][pos_idx]
-    
+
     # 设置字体
     canvas_obj.setFont(font_name, font_size)
     # 文本边距
@@ -140,15 +140,14 @@ def draw_text_in_a6_region_with_cursor(
     text_x = cursor_x + x_offset if cursor_x is not None else x_offset + margin
     print(f"当前绘制位置：{text_x}, {text_y}")
     print(f"当前光标位置：{current_cursor}")
-    print("  开始绘制文本:",text)
+    print("  开始绘制文本:", text)
     # 逐行处理文本直到区域用完或文本处理完毕
-        
+
     while current_cursor < len(text):
         # 检查当前行是否还有足够的垂直空间
         if (text_y - line_height) < (y_offset + margin):
             # 没有足够空间绘制下一行，返回未完成状态
             return False, current_cursor, text_x, text_y
-
         # 找到当前行的文本
         line_start = current_cursor
         line_end = line_start
@@ -221,7 +220,7 @@ def draw_text_in_a6_region_with_cursor(
                 return False, current_cursor, text_x, text_y
         else:
             if current_line:
-                
+
                 text_width = canvas_obj.stringWidth(current_line, font_name,
                                                     font_size)
 
@@ -236,11 +235,11 @@ def draw_text_in_a6_region_with_cursor(
                 canvas_obj.drawString(line_x, text_y - font_size, current_line)
                 print(f"绘制行：{current_line}")
                 canvas_obj.rect(x_offset,
-                            y_offset,
-                            A6_WIDTH,
-                            A6_HEIGHT,
-                            stroke=1,
-                            fill=0)    
+                                y_offset,
+                                A6_WIDTH,
+                                A6_HEIGHT,
+                                stroke=1,
+                                fill=0)
             # 更新y坐标
             text_y -= line_height
 
@@ -311,15 +310,15 @@ def draw_html_in_a6_region(a6_index,
         if isinstance(element, str):
             pass
         elif element.name == "p":
-            text_content = "    "+element.text.strip()
+            text_content = "++++" + element.text.strip()
             is_complete = False
             text_cursor = 0
             print(f"准备处理处理ttt text_content {text_content}")
             print(f"页面:{a6_index} 绘制位置:{cursor_x}, {cursor_y}")
             while not is_complete:
                 is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
-                    a6_index, text_content, text_cursor, cursor_x, cursor_y, font_size,
-                    font_name)
+                    a6_index, text_content, text_cursor, cursor_x, cursor_y,
+                    font_size, font_name)
                 if not is_complete:
                     cursor_x = None
                     cursor_y = None
@@ -355,17 +354,17 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     for html_content in epub_html_iter(epub_path):
         # 合并剩余内容和当前内容
         a6_index, cursor_x, cursor_y = draw_html_in_a6_region(
-            a6_index = a6_index,
+            a6_index=a6_index,
             html_content=html_content,
             cursor_x=cursor_x,
             cursor_y=cursor_y,
             font_name=DEFAULT_FONT)
 
     # 保存两个PDF
-    
+
     front_c.showPage()
     back_c.showPage()
-    
+
     front_c.save()
     back_c.save()
 
