@@ -63,7 +63,7 @@ A6_WIDTH = PAGE_WIDTH / 2
 A6_HEIGHT = PAGE_HEIGHT / 2
 
 # 文本渲染配置
-TEXT_FONT_SIZE = 10
+TEXT_FONT_SIZE = 12
 TEXT_LINE_SPACE = 3
 MARGIN = 10  # 区域内边距
 render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
@@ -88,6 +88,184 @@ page_positions = [
 ]
 
 
+def draw_text_in_a6_region_with_cursor(
+    a6_index,
+    text,
+    start_cursor,
+    cursor_x,
+    cursor_y,
+    font_size=TEXT_FONT_SIZE,
+    font_name=DEFAULT_FONT,
+    align="left",
+):
+    """
+    在指定的A6区域内绘制文本，使用游标模式
+    :param a6_index: A6区域索引
+    :param text: 完整文本内容
+    :param start_cursor: 开始位置游标
+    :param cursor_x: 当前绘制的x坐标
+    :param cursor_y: 当前绘制的y坐标
+    :param font_size: 字体大小
+    :param font_name: 字体名称
+    :param align: 对齐方式 ("left", "center", "right")
+    :return: (finished, text_cursor, next_x, next_y) - 是否完成、文本游标位置、下次绘制的x和y坐标
+    """
+    # 获取当前要渲染的A6区域位置
+    page_idx, pos_idx = render_order[a6_index % 8]
+
+    # 选择当前应该渲染的画布（正面或背面）
+    if page_idx == 0:  # 正面页
+        canvas_obj = front_c
+    else:  # 背面页
+        canvas_obj = back_c
+
+    # 获取当前A6区域的物理位置
+    x_offset, y_offset = page_positions[page_idx][pos_idx]
+    
+    print(f"绘制A6区域 {a6_index}：{x_offset}, {y_offset}")
+
+    # 设置字体
+    canvas_obj.setFont(font_name, 10)
+
+    # 文本边距
+    margin = MARGIN
+    available_width = A6_WIDTH - 2 * margin
+    available_height = A6_HEIGHT - 2 * margin
+
+    # 绘制文本行的高度
+    line_height = font_size + TEXT_LINE_SPACE
+    current_cursor = start_cursor
+    print(f"从位置 {start_cursor} 开始绘制")
+    exit(0)
+    # 从指定的光标位置开始绘制
+    text_y = cursor_y
+    text_x = cursor_x if cursor_x is not None else x_offset + margin
+
+    # 逐行处理文本直到区域用完或文本处理完毕
+    while current_cursor < len(text):
+        # 检查当前行是否还有足够的垂直空间
+        if (text_y - line_height) < (y_offset + margin):
+            # 没有足够空间绘制下一行，返回未完成状态
+            return False, current_cursor, text_x, text_y
+
+        # 找到当前行的文本
+        line_start = current_cursor
+        line_end = line_start
+
+        # 计算当前行的可用宽度
+        current_line_available_width = available_width
+
+        # 寻找合适的换行点
+        while line_end < len(text):
+            # 检查是否遇到换行符
+            if text[line_end] == '\n':
+                line_end += 1  # 包含换行符
+                break
+
+            # 检查当前行的宽度
+            test_line = text[line_start:line_end + 1]
+
+            line_width = canvas_obj.stringWidth(test_line, font_name,
+                                                font_size)
+
+            # 如果当前行宽度超过可用宽度，回退到上一个合适的断点
+            if line_width > current_line_available_width:
+                if line_end == line_start:
+                    # 单个字符就超宽，强制换行到下一行
+                    break
+                else:
+                    # 找到上一个空格作为断点
+                    space_pos = test_line.rfind(' ')
+                    if space_pos > 0:
+                        line_end = line_start + space_pos + 1
+                    else:
+                        # 没有空格，强制在当前字符处断开
+                        line_end -= 1
+                    break
+            else:
+                line_end += 1
+
+        # 获取当前行文本
+        current_line = text[line_start:line_end].rstrip('\n')
+
+        # 检查是否遇到段落分隔符
+        if '\n' in current_line and current_line.endswith('\n'):
+            # 如果当前行以换行符结尾，处理段落分隔
+            paragraph_pos = current_line.rindex('\n')
+            current_line = current_line[:paragraph_pos]
+            # 修正游标位置
+            actual_end = line_start + paragraph_pos + 1  # 加上换行符
+        else:
+            actual_end = line_end
+
+        # 检查是否为章节标题（第x章 或 第x回 开头）
+        chapter_pattern = r'^第[一二三四五六七八九十零\d]+[章节回篇卷].*'
+        if re.match(chapter_pattern, current_line.strip()):
+            # 章节标题使用更大的字体并居中
+            title_font_size = 12
+            canvas_obj.setFont(font_name, title_font_size)
+
+            title_text = current_line.strip()
+            text_width = canvas_obj.stringWidth(title_text, font_name,
+                                                title_font_size)
+
+            if text_width <= current_line_available_width:
+                # 居中显示
+                if align == "center":
+                    center_x = x_offset + (A6_WIDTH - text_width) / 2
+                else:
+                    center_x = x_offset + margin
+                canvas_obj.drawString(center_x, text_y - title_font_size,
+                                      title_text)
+                text_y -= title_font_size + TEXT_LINE_SPACE
+                # 恢复默认字体
+                canvas_obj.setFont(font_name, font_size)
+            else:
+                # 标题太长，无法显示，返回未完成状态
+                return False, current_cursor, text_x, text_y
+        else:
+            # 普通文本处理
+            if current_line:
+                # 检查是否是新段落的开始
+                is_paragraph_start = (
+                    line_start == 0 or  # 文本开头
+                    (line_start >= 2
+                     and text[line_start - 2:line_start] == '\n\n')  # 段落分隔后
+                )
+
+                display_line = current_line
+                if is_paragraph_start:
+                    # 添加段落缩进
+                    display_line = "    " + current_line
+
+                text_width = canvas_obj.stringWidth(display_line, font_name,
+                                                    font_size)
+
+                # 根据对齐方式计算x坐标
+                if align == "center":
+                    line_x = x_offset + (A6_WIDTH - text_width) / 2
+                elif align == "right":
+                    line_x = x_offset + A6_WIDTH - text_width - margin
+                else:  # left
+                    line_x = x_offset + margin
+
+                canvas_obj.drawString(line_x, text_y - font_size, display_line)
+
+            # 更新y坐标
+            text_y -= line_height
+
+        # 更新游标
+        current_cursor = actual_end
+
+        # 检查是否已经处理完整个文本
+        if current_cursor >= len(text):
+            # 文本处理完成
+            return True, current_cursor, text_x, text_y
+
+    # 如果循环结束但文本未处理完，说明A6区域已满
+    return False, current_cursor, text_x, text_y
+
+
 def draw_html_in_a6_region(a6_index,
                            html_content,
                            cursor_x=None,
@@ -97,95 +275,73 @@ def draw_html_in_a6_region(a6_index,
     """
     draw_html_in_a6_region 的 Docstring
     
-    :param a6_index: 
-    :param html_content: 说明
-    :param cursor_x: 说明
-    :param cursor_y: 说明
-    :param font_size: 说明
-    :param font_name: 说明
-    """ 
+    :param a6_index: A6区域索引
+    :param html_content: HTML内容
+    :param cursor_x: 当前绘制的x坐标
+    :param cursor_y: 当前绘制的y坐标
+    :param font_size: 字体大小
+    :param font_name: 字体名称
+    :return: (a6_index, next_x, next_y) - 返回A6索引和下次绘制的位置
+    """
     # 解析HTML内容
     soup = BeautifulSoup(html_content, 'html.parser')
-    # 文本边距
     margin = MARGIN
+
     # 获取当前要渲染的A6区域位置
-    page_idx, pos_idx = render_order[a6_index % 8]
 
-    # 选择当前应该渲染的画布（正面或背面）
-    if page_idx == 0:  # 正面页
-        current_canvas = front_c
-    else:  # 背面页
-        current_canvas = back_c
+    # 使用深度优先遍历，按顺序提取所有元素
+    def extract_elements_in_order(tag):
+        """按文档顺序提取所有元素"""
+        elements = []
+        # if tag.name and tag.name in ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'br','image']:
+        # 检查是否有子标签
+        child_tags = [
+            child for child in tag.children
+            if hasattr(child, 'name') and child.name
+        ]
+        if child_tags:
+            # 有子标签，递归处理每个子元素，保持文档顺序
+            for child in tag.children:
+                if hasattr(child, 'name') and child.name:  # 是标签
+                    elements.extend(extract_elements_in_order(child))
+                elif hasattr(child, 'strip') and child.strip():  # 是文本节点
+                    elements.append(str(child).strip())
+        else:
+            elements.append(tag)
+        return elements
 
-    # print(f"  渲染第 {a6_index+1} 个A6区域 (第{page_idx+1}页, 位置{pos_idx})")
+    # 提取根元素下的所有子元素，保持文档顺序
+    all_elements = []
+    for child in soup.children:
+        if hasattr(child, 'name') and child.name:  # 是标签
+            all_elements.extend(extract_elements_in_order(child))
+        elif hasattr(child, 'strip') and child.strip():  # 是文本节点
+            all_elements.append(str(child).strip())
 
-    # 获取当前A6区域的物理位置
-    x_offset, y_offset = page_positions[page_idx][pos_idx]
+    print("all_elements")
 
-    # 设置起始绘制位置
-    if cursor_x is None:
-        cursor_x = x_offset + margin
-    if cursor_y is None:
-        cursor_y = y_offset - margin  # 从顶部开始
-    # 设置字体
-    current_canvas.setFont(font_name, font_size)
-    # 提取文本内容
-    print(soup)
-    print(f"="*90)
     remaining_content = ""
-    has_more_content = False
-
-    # for i, line in enumerate(lines):
-    #     if not line.strip():
-    #         continue
-
-    #     # 普通文本处理
-    #     words = line.split()
-    #     current_line = ""
-
-    #     for word in words:
-    #         test_line = current_line + " " + word if current_line else word
-    #         line_width = current_canvas.stringWidth(test_line, font_name,
-    #                                             font_size)
-
-    #         if line_width <= available_width:
-    #             current_line = test_line
-    #         else:
-    #             # 当前行已满，绘制当前行
-    #             required_height = font_size + TEXT_LINE_SPACE
-    #             if (cursor_y - required_height) >= (y + margin):
-    #                 current_canvas.drawString(cursor_x - margin,
-    #                                         cursor_y - font_size,
-    #                                         current_line)
-    #                 cursor_y -= required_height
-    #                 current_line = word
-    #             else:
-    #                 # 没有足够空间，保存剩余内容
-    #                 remaining_words = [current_line] + [
-    #                     word
-    #                 ] + words[words.index(word) + 1:]
-    #                 remaining_content += " ".join(
-    #                     remaining_words) + "\n" + "\n".join(lines[i + 1:])
-    #                 has_more_content = True
-    #                 break
-
-    #     # 绘制最后的行
-    #     if current_line and not has_more_content:
-    #         required_height = font_size + TEXT_LINE_SPACE
-    #         if (cursor_y - required_height) >= (y + margin):
-    #             current_canvas.drawString(cursor_x - margin,
-    #                                     cursor_y - font_size, current_line)
-    #             cursor_y -= required_height
-    #         else:
-    #             remaining_content += current_line + "\n" + "\n".join(
-    #                 lines[i + 1:])
-    #             has_more_content = True
-    #             break
-
-    # 返回下次绘制的位置
-    next_x = cursor_x
-    next_y = cursor_y
-    return a6_index, next_x, next_y
+    current_x = cursor_x
+    current_y = cursor_y
+    # 处理提取出的元素，保持文档顺序
+    for element in all_elements:
+        print(element)
+        if isinstance(element, str):
+            pass
+        elif element.name == "p":
+            text_content = element.text.strip()
+            is_complete = False
+            print("text_content-----------:", text_content)
+            while not is_complete:
+                is_complete, current_text_cursor, current_x, current_y = draw_text_in_a6_region_with_cursor(
+                    a6_index, text_content, 0, cursor_x, cursor_y, font_size,
+                    font_name)
+                if not is_complete:
+                    if a6_index % 8 == 7:
+                        front_c.showPage()
+                        back_c.showPage()
+                        a6_index += 1
+    return a6_index, current_x, current_y
 
 
 def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
@@ -200,17 +356,12 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     a6_index = 0
     cursor_x = 0  # 初始化游标
     cursor_y = A6_HEIGHT  # 初始化游标
-    remaining_html = ""
-
     # 遍历EPUB的HTML内容
     for html_content in epub_html_iter(epub_path):
         # 合并剩余内容和当前内容
-        current_content = remaining_html + html_content if remaining_html else html_content
-
-        # 在A6区域内绘制HTML内容
         a6_index, cursor_x, cursor_y = draw_html_in_a6_region(
             a6_index == a6_index,
-            html_content=current_content,
+            html_content=html_content,
             cursor_x=cursor_x,
             cursor_y=cursor_y,
             font_name=DEFAULT_FONT)
