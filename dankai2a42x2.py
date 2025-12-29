@@ -99,6 +99,7 @@ LINE_WIDTH = 1
 lr_padding = 8
 center_padding = 16
 PRE_NONE = 0
+start_index_offset = 0
 print_page_index = True
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
@@ -352,7 +353,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             # 设置字体颜色为黑色
             canvas_obj.setFillColorRGB(0, 0, 0)
 
-            page_number_text = str(page_number - PRE_NONE)
+            page_number_text = str(page_number - PRE_NONE + start_index_offset)
             text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
                                                 6)
 
