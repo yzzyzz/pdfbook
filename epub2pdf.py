@@ -76,7 +76,6 @@ page_center_margin = 18
 a6_lr_margin = 0
 a6_tb_margin = 2
 
-
 # A6区域位置定义
 page_positions = [
     [  # 第1页
@@ -136,7 +135,7 @@ def draw_text_in_a6_region_with_cursor(
     # 文本边距
     margin = MARGIN
     available_width = A6_WIDTH - 2 * a6_lr_margin - page_lr_margin - page_center_margin
-    available_height = A6_HEIGHT - 2 * a6_tb_margin 
+    available_height = A6_HEIGHT - 2 * a6_tb_margin
 
     # 绘制文本行的高度
     line_height = font_size + TEXT_LINE_SPACE
@@ -224,6 +223,90 @@ def draw_text_in_a6_region_with_cursor(
     # 如果循环结束但文本未处理完，说明A6区域已满
     return False, current_cursor, text_x, text_y
 
+def draw_image_in_a6_region(a6_index, image_file):
+    """
+    绘制图片到A6区域
+    :param a6_index: A6区域索引
+    :param image_file: 图片文件路径或URL
+    :return: None
+    """
+    import os
+    from reportlab.lib.utils import ImageReader
+    from PIL import Image as PILImage
+    
+    print(f"处理A6区域 {a6_index}，图片文件: {image_file}")
+    page_idx, pos_idx = render_order[a6_index % 8]
+
+    # 选择当前应该渲染的画布（正面或背面）
+    if page_idx == 0:  # 正面页
+        canvas_obj = front_c
+        print("  绘制正面页")
+    else:  # 背面页
+        canvas_obj = back_c
+        print("  绘制背面页")
+
+    # 获取当前A6区域的物理位置
+    x_offset, y_offset = page_positions[page_idx][pos_idx]
+
+    # 图片边距
+    img_margin = MARGIN
+    
+    # 计算A6区域可用空间
+    available_width = A6_WIDTH - 2 * img_margin
+    available_height = A6_HEIGHT - 2 * img_margin
+    
+    # 获取图片路径（相对于EPUB的images目录）
+    epub_dir = os.path.dirname(sys.argv[1]) if len(sys.argv) > 1 else "."
+    full_image_path = os.path.join(epub_dir, "images", image_file) if "images/" in image_file else os.path.join(epub_dir, image_file)
+    
+    # 如果图片文件不存在，尝试从EPUB内容中查找
+    if not os.path.exists(full_image_path):
+        # 尝试在当前工作目录下查找
+        full_image_path = os.path.join(os.getcwd(), image_file)
+        
+    if not os.path.exists(full_image_path):
+        # 如果仍然找不到，跳过绘制
+        print(f"  警告：图片文件不存在: {full_image_path}")
+        # 绘制一个占位符
+        placeholder_text = "[图片: " + image_file + "]"
+        canvas_obj.drawString(x_offset + img_margin, y_offset + A6_HEIGHT/2, placeholder_text)
+        return
+
+    try:
+        # 使用PIL获取图片尺寸
+        with PILImage.open(full_image_path) as img:
+            img_width, img_height = img.size
+        
+        # 计算缩放比例以适应A6区域
+        scale_w = available_width / img_width
+        scale_h = available_height / img_height
+        scale = min(scale_w, scale_h)  # 保持宽高比
+        
+        # 计算缩放后的尺寸
+        scaled_w = img_width * scale
+        scaled_h = img_height * scale
+        
+        # 计算居中位置
+        centered_x = x_offset + img_margin + (available_width - scaled_w) / 2
+        centered_y = y_offset + img_margin + (available_height - scaled_h) / 2
+        
+        # 绘制图片
+        canvas_obj.drawImage(full_image_path,
+                           x=centered_x,
+                           y=centered_y,
+                           width=scaled_w,
+                           height=scaled_h,
+                           preserveAspectRatio=True,
+                           mask='auto')  # auto表示使用图片的透明度信息
+        
+        print(f"  成功绘制图片: {image_file} (原始尺寸: {img_width}x{img_height}, 绘制尺寸: {scaled_w}x{scaled_h})")
+        
+    except Exception as e:
+        print(f"  错误：无法绘制图片 {image_file}: {str(e)}")
+        # 绘制一个占位符
+        placeholder_text = "[图片: " + image_file + " - 加载失败]"
+        canvas_obj.drawString(x_offset + img_margin, y_offset + A6_HEIGHT/2, placeholder_text)
+
 
 def draw_html_in_a6_region(a6_index,
                            html_content,
@@ -296,15 +379,29 @@ def draw_html_in_a6_region(a6_index,
                         front_c.showPage()
                         back_c.showPage()
                     a6_index += 1
-                    # print(f"未完成文本：{text_content[text_cursor:]}")
-                    # front_c.showPage()
-                    # back_c.showPage()
-                    # front_c.save()
-                    # back_c.save()
-                    # exit(1)
                 else:
                     text_cursor = 0
                     pass
+        elif element.name == "img" or element.name == "image":
+            cover_filename = ""
+            if element.has_attr("xlink:href"):
+                cover_filename = element["xlink:href"]
+                print(f"图片:{cover_filename}")
+            else:
+                cover_filename = element.get("src")
+            a6_index += 1
+            if a6_index % 8 == 7:
+                front_c.showPage()
+                back_c.showPage()
+            cover_filename = "./yt3dir/"+cover_filename
+            print(f"图片:{cover_filename}")
+            draw_image_in_a6_region(a6_index, cover_filename)
+            if a6_index % 8 == 7:
+                front_c.showPage()
+                back_c.showPage()
+            a6_index += 1
+            text_cursor = 0
+
     return a6_index, cursor_x, cursor_y
 
 
