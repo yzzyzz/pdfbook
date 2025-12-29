@@ -331,10 +331,11 @@ def draw_html_in_a6_region(a6_index,
         elif element.name == "p":
             text_content = element.text.strip()
             is_complete = False
+            text_cursor = 0
             print("text_content-----------:", text_content)
             while not is_complete:
-                is_complete, current_text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
-                    a6_index, text_content, 0, cursor_x, cursor_y, font_size,
+                is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
+                    a6_index, text_content, text_cursor, cursor_x, cursor_y, font_size,
                     font_name)
                 if not is_complete:
                     cursor_x = None
@@ -344,6 +345,7 @@ def draw_html_in_a6_region(a6_index,
                         back_c.showPage()
                     a6_index += 1
                 else:
+                    text_cursor = 0
                     pass
     return a6_index, cursor_x, cursor_y
 
