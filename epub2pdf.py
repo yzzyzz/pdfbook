@@ -168,16 +168,9 @@ def draw_text_in_a6_region_with_cursor(
             # 如果当前行宽度超过可用宽度，回退到上一个合适的断点
             if line_width > current_line_available_width:
                 if line_end == line_start:
-                    # 单个字符就超宽，强制换行到下一行
                     break
                 else:
-                    # 找到上一个空格作为断点
-                    space_pos = test_line.rfind(' ')
-                    if space_pos > 0:
-                        line_end = line_start + space_pos + 1
-                    else:
-                        # 没有空格，强制在当前字符处断开
-                        line_end -= 1
+                    line_end -= 1
                     break
             else:
                 line_end += 1
@@ -310,7 +303,7 @@ def draw_html_in_a6_region(a6_index,
         if isinstance(element, str):
             pass
         elif element.name == "p":
-            text_content = "++++" + element.text.strip()
+            text_content = "    " + element.text.strip()
             is_complete = False
             text_cursor = 0
             print(f"准备处理处理ttt text_content {text_content}")
