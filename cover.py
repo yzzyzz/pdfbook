@@ -1,12 +1,43 @@
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A5, A4 ,A6
+from reportlab.lib.pagesizes import A5, A4, A6
 from reportlab.lib.units import mm
 from PIL import Image
+from reportlab.pdfbase import pdfmetrics
+
 import os
 import sys
 
 zhongxianspace = 20
-book_name="你好，世界"
+book_name = "sdfsfsdf唇语"
+
+# 注册中文字体
+try:
+    # 尝试使用系统字体
+    from reportlab.pdfbase.pdfmetrics import registerFont
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    # 尝试注册常见中文字体
+    font_registered = False
+    common_fonts = [
+        # "AlibabaPuHuiTi-3-55-RegularL3.ttf",  # macOS
+        "fs.ttf",  # macOS
+    ]
+
+    for font_path in common_fonts:
+        if os.path.exists(font_path):
+            pdfmetrics.registerFont(TTFont("ChineseFont", font_path))
+            font_registered = True
+            print(f"提示：已自动注册字体 '{font_path}'")
+            break
+    if not font_registered:
+        # 如果没有找到合适的字体，使用默认字体
+        DEFAULT_FONT = "Helvetica"
+    else:
+        DEFAULT_FONT = "ChineseFont"
+
+except:
+    DEFAULT_FONT = "Helvetica"
+
 
 def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     """
@@ -30,13 +61,15 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
 
         # --------------- 第二步：筛选有效图片（从文件夹） ---------------
         # 支持的图片格式
-        valid_image_ext = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp', '.webp')
+        valid_image_ext = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp',
+                           '.webp')
         # 遍历文件夹，筛选图片文件并按文件名排序
         image_files = []
         for filename in os.listdir(image_folder):
             file_path = os.path.join(image_folder, filename)
             # 跳过目录，只处理文件
-            if os.path.isfile(file_path) and filename.lower().endswith(valid_image_ext):
+            if os.path.isfile(file_path) and filename.lower().endswith(
+                    valid_image_ext):
                 image_files.append(file_path)
 
         # 按文件名自然排序（保证图片顺序可控）
@@ -50,7 +83,8 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     elif os.path.isfile(input_path):
         # 输入是单个图片文件
         file_ext = os.path.splitext(input_path)[1].lower()
-        valid_image_ext = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp', '.webp')
+        valid_image_ext = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp',
+                           '.webp')
 
         if file_ext not in valid_image_ext:
             raise ValueError(f"错误：输入文件 '{input_path}' 不是有效的图片格式！")
@@ -68,7 +102,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
 
     # A5高度和宽度作为参考尺寸
     a6_height = A6[1]  # A5竖版的高度
-    a6_width = A6[0]   # A5的宽度
+    a6_width = A6[0]  # A5的宽度
 
     from reportlab.lib.pagesizes import landscape
     landscape_pagesize = landscape(pagesize)  # 横向A4: 297mm x 210mm
@@ -84,7 +118,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
 
     current_x = margin  # 当前绘制的x坐标
     current_y = page_height - margin  # 当前绘制的y坐标（从页面顶部开始）
-    
+
     text_x = 0
     # 处理所有图片
     for i, image_file in enumerate(image_files):
@@ -112,31 +146,63 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         scaled_h = img_h * scale
 
         # 绘制图片
-        c.drawImage(image_file,
-                    x=current_x,
-                    y=current_y - scaled_h,  # 从当前y位置向下绘制
-                    width=scaled_w,
-                    height=scaled_h,
-                    preserveAspectRatio=True,
-                    mask='auto')
+        c.drawImage(
+            image_file,
+            x=current_x,
+            y=current_y - scaled_h,  # 从当前y位置向下绘制
+            width=scaled_w,
+            height=scaled_h,
+            preserveAspectRatio=True,
+            mask='auto')
 
-        print(f"绘制第 {i+1} 张图片: {os.path.basename(image_file)} 位置: x={current_x:.2f}, y={current_y - scaled_h:.2f}")
+        print(
+            f"绘制第 {i+1} 张图片: {os.path.basename(image_file)} 位置: x={current_x:.2f}, y={current_y - scaled_h:.2f}"
+        )
 
         # 更新下一个图片的x坐标
         space_points = zhongxianspace * 72 / 25.4
-        text_x = current_x + scale_w
+        if text_x == 0:
+            text_x = current_x + scaled_w
         current_x += scaled_w + space_points  # 加10点间距
 
     # 保存PDF文件
-    
+
     # 绘制文字：
-        c.setFont("SimHei", 12)
-        
-        
+    # 绘制垂直方向的文字
+    text_chars = list(book_name)
+    char_height = 12 + 2  # 字体大小 + 行间距
+    total_text_height = len(text_chars) * char_height
+    c.setFont(DEFAULT_FONT, 10)
+    # 如果文字总高度超过图片高度，则调整字体大小或截断文字
+    if total_text_height > scaled_h:
+        # 重新计算字体大小
+        new_font_size = scaled_h / len(text_chars) * 0.8  # 留一些边距
+        if new_font_size < 6:  # 最小字体大小
+            new_font_size = 6
+        char_height = new_font_size + 1
+
+    # 计算起始y坐标，使文字垂直居中
+    start_y = page_height - (scaled_h / 2) + (len(text_chars) * char_height /
+                                              2)
+
+    # 绘制每个字符
+    print(text_chars)
+    for j, char in enumerate(text_chars):
+        char_y = start_y - j * char_height
+        # 将文字居中于text_x位置
+        centered_x = text_x + 40
+        c.drawString(centered_x, char_y, char)
+
+    # 更新下一个图片的x坐标
+    space_points = zhongxianspace * 72 / 25.4
+    current_x += scaled_w + space_points  # 加间距
+
     c.save()
     print(f"\n✅ PDF生成完成！")
     print(f"📁 输出路径：{os.path.abspath(output_pdf)}")
     print(f"📄 页面尺寸：A4横版")
+
+
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
     # 检查命令行参数数量
