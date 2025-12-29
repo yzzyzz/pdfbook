@@ -7,8 +7,8 @@ from reportlab.pdfbase import pdfmetrics
 import os
 import sys
 
-zhongxianspace = 20
-book_name = "纯欲解放区"
+zhongxianspace = 14
+book_name = "蜡笔小新6"
 
 # 注册中文字体
 try:
@@ -160,8 +160,8 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         # 更新下一个图片的x坐标
         space_points = zhongxianspace * 72 / 25.4
         if text_x == 0:
-            text_x = a6_width - space_points/2
-        current_x += scaled_w + space_points  # 加10点间距
+            text_x = a6_width
+        current_x += (a6_width + space_points)  # 加10点间距
 
     # 保存PDF文件
 
@@ -179,12 +179,8 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     for j, char in enumerate(text_chars):
         char_y = start_y - j * char_height
         # 将文字居中于text_x位置
-        centered_x = text_x + 40
+        centered_x = text_x
         c.drawString(centered_x, char_y, char)
-
-    # 更新下一个图片的x坐标
-    space_points = zhongxianspace * 72 / 25.4
-    current_x += scaled_w + space_points  # 加间距
 
     c.save()
     print(f"\n✅ PDF生成完成！")
