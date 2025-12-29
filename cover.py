@@ -6,6 +6,7 @@ import os
 import sys
 
 zhongxianspace = 20
+book_name="你好，世界"
 
 def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     """
@@ -83,7 +84,8 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
 
     current_x = margin  # 当前绘制的x坐标
     current_y = page_height - margin  # 当前绘制的y坐标（从页面顶部开始）
-
+    
+    text_x = 0
     # 处理所有图片
     for i, image_file in enumerate(image_files):
         # 打开图片并获取尺寸（自动处理EXIF旋转）
@@ -122,9 +124,15 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
 
         # 更新下一个图片的x坐标
         space_points = zhongxianspace * 72 / 25.4
+        text_x = current_x + scale_w
         current_x += scaled_w + space_points  # 加10点间距
 
     # 保存PDF文件
+    
+    # 绘制文字：
+        c.setFont("SimHei", 12)
+        
+        
     c.save()
     print(f"\n✅ PDF生成完成！")
     print(f"📁 输出路径：{os.path.abspath(output_pdf)}")
