@@ -317,9 +317,6 @@ def draw_html_in_a6_region(a6_index,
             all_elements.extend(extract_elements_in_order(child))
         elif hasattr(child, 'strip') and child.strip():  # 是文本节点
             all_elements.append(str(child).strip())
-    print("all_elements")
-    print(cursor_x)
-    exit(0)
     # 处理提取出的元素，保持文档顺序
     for element in all_elements:
         print(element)
@@ -342,7 +339,7 @@ def draw_html_in_a6_region(a6_index,
                         a6_index += 1
                 else:
                     pass
-    return a6_index, current_x, current_y
+    return a6_index, cursor_x, cursor_y
 
 
 def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
