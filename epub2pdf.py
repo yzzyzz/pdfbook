@@ -110,6 +110,7 @@ def draw_text_in_a6_region_with_cursor(
     :return: (finished, text_cursor, next_x, next_y) - 是否完成、文本游标位置、下次绘制的x和y坐标
     """
     # 获取当前要渲染的A6区域位置
+    print(f"处理A6区域 {a6_index}")
     page_idx, pos_idx = render_order[a6_index % 8]
 
     # 选择当前应该渲染的画布（正面或背面）
@@ -250,7 +251,7 @@ def draw_text_in_a6_region_with_cursor(
 
                 canvas_obj.drawString(line_x, text_y - font_size, display_line)
                 print(f"绘制行：{display_line}")
-                
+
                 canvas_obj.rect(x_offset,
                             y_offset,
                             A6_WIDTH,
@@ -374,7 +375,7 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     for html_content in epub_html_iter(epub_path):
         # 合并剩余内容和当前内容
         a6_index, cursor_x, cursor_y = draw_html_in_a6_region(
-            a6_index == a6_index,
+            a6_index = a6_index,
             html_content=html_content,
             cursor_x=cursor_x,
             cursor_y=cursor_y,
