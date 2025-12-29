@@ -7,6 +7,23 @@ import os
 import sys
 import re
 
+import ebooklib
+from ebooklib import epub
+from bs4 import BeautifulSoup
+
+
+def epub_html_iter(epub_path):
+    """
+    按文档顺序返回 HTML 迭代器
+    """
+    book = epub.read_epub(epub_path)
+    for item_id, _ in book.spine:
+        item = book.get_item_with_id(item_id)
+        if item.get_type() == ebooklib.ITEM_DOCUMENT:
+            content = item.get_content()
+            soup = BeautifulSoup(content, "html.parser")
+            yield soup.prettify()  # 返回格式化的 HTML 字符串
+
 
 # 尝试导入 PyPDF2 用于合并 PDF
 try:
@@ -49,18 +66,6 @@ A6_HEIGHT = PAGE_HEIGHT / 2
 TEXT_FONT_SIZE = 10
 TEXT_LINE_SPACE = 3
 MARGIN = 10  # 区域内边距
-
-
-def read_text_file(file_path):
-    """
-    读取txt文件内容
-    :param file_path: txt文件路径
-    :return: 文件内容字符串
-    """
-    with open(file_path, 'r', encoding='utf-8') as file:
-        content = file.read()
-    return content
-
 
 
 def draw_text_in_a6_region_with_cursor(canvas_obj,
@@ -179,12 +184,14 @@ def draw_text_in_a6_region_with_cursor(canvas_obj,
                 # 设置章节标题字体大小
                 title_font_size = 12
                 canvas_obj.setFont(font_name, title_font_size)
-                
+
                 # 居中显示
-                text_width = canvas_obj.stringWidth(current_line, font_name, title_font_size)
+                text_width = canvas_obj.stringWidth(current_line, font_name,
+                                                    title_font_size)
                 center_x = x + (width - text_width) / 2
                 text_y -= line_height
-                canvas_obj.drawString(center_x, text_y - title_font_size, current_line)
+                canvas_obj.drawString(center_x, text_y - title_font_size,
+                                      current_line)
                 # 恢复默认字体大小
                 canvas_obj.setFont(font_name, font_size)
             else:
@@ -211,17 +218,9 @@ def draw_text_in_a6_region_with_cursor(canvas_obj,
     has_more_text = current_cursor < len(text)
     return current_cursor, has_more_text
 
+
 def generate_custom_order_pdfs(text_file_path, front_pdf, back_pdf,
                                render_order):
-    """
-    从txt文件生成两个PDF（正面和背面），按照自定义顺序交替渲染内容
-    :param text_file_path: txt文件路径
-    :param front_pdf: 正面PDF文件路径
-    :param back_pdf: 背面PDF文件路径
-    :param render_order: 渲染顺序列表，包含8个元素，每个元素是(页码, 位置索引)的元组
-    """
-    # 读取txt文件
-    text_content = read_text_file(text_file_path)
 
     # 初始化两个PDF画布（A4竖版）
     front_c = canvas.Canvas(front_pdf, pagesize=A4)
@@ -243,62 +242,61 @@ def generate_custom_order_pdfs(text_file_path, front_pdf, back_pdf,
         ]
     ]
 
-    cursor = 0  # 初始化游标
-    has_more_text = True
-    sheet_count = 0  # 双面打印对计数器
-    a6_index = 0
+    # cursor = 0  # 初始化游标
+    # has_more_text = True
+    # sheet_count = 0  # 双面打印对计数器
+    # a6_index = 0
 
-    while has_more_text:
-        print(f"正在处理第 {sheet_count + 1} 个双面打印对...")
-        page_idx, pos_idx = render_order[a6_index % 8]
-        # 选择当前应该渲染的画布（正面或背面）
-        if page_idx == 0:  # 正面页
-            current_canvas = front_c
-        else:  # 背面页
-            current_canvas = back_c
+    # 遍历迭代器
+    for i, html in enumerate(epub_html_iter(text_file_path), start=1):
+        print(f"===== 第 {i} 章 =====")
+        print(html)  # 只打印前 500 个字符，避免输出过长
+        print("=" * 60)
 
-        print(f"  渲染第 {a6_index} 个A6区域 (第{page_idx+1}页, 位置{pos_idx})")
+    # while has_more_text:
+    #     print(f"正在处理第 {sheet_count + 1} 个双面打印对...")
+    #     page_idx, pos_idx = render_order[a6_index % 8]
+    #     # 选择当前应该渲染的画布（正面或背面）
+    #     if page_idx == 0:  # 正面页
+    #         current_canvas = front_c
+    #     else:  # 背面页
+    #         current_canvas = back_c
 
-        # 获取当前A6区域的物理位置
-        x_offset, y_offset = page_positions[page_idx][pos_idx]
+    #     print(f"  渲染第 {a6_index} 个A6区域 (第{page_idx+1}页, 位置{pos_idx})")
 
-        # 绘制A6区域边框（可选，便于查看布局）
-        current_canvas.rect(x_offset,
-                            y_offset,
-                            A6_WIDTH,
-                            A6_HEIGHT,
-                            stroke=1,
-                            fill=0)
+    #     # 获取当前A6区域的物理位置
+    #     x_offset, y_offset = page_positions[page_idx][pos_idx]
 
-        # 在A6区域内绘制文本，并更新游标
-        cursor, has_more_text = draw_text_in_a6_region_with_cursor(
-            canvas_obj=current_canvas,
-            text=text_content,
-            start_cursor=cursor,
-            x=x_offset,
-            y=y_offset,
-            width=A6_WIDTH,
-            height=A6_HEIGHT,
-            font_name=DEFAULT_FONT)
+    #     # 绘制A6区域边框（可选，便于查看布局）
+    #     current_canvas.rect(x_offset,
+    #                         y_offset,
+    #                         A6_WIDTH,
+    #                         A6_HEIGHT,
+    #                         stroke=1,
+    #                         fill=0)
 
-        if a6_index % 8 == 7:
-            front_c.showPage()
-            back_c.showPage()
-            sheet_count += 1
+    #     # 在A6区域内绘制文本，并更新游标
+    #     cursor, has_more_text = draw_text_in_a6_region_with_cursor(
+    #         canvas_obj=current_canvas,
+    #         text=text_content,
+    #         start_cursor=cursor,
+    #         x=x_offset,
+    #         y=y_offset,
+    #         width=A6_WIDTH,
+    #         height=A6_HEIGHT,
+    #         font_name=DEFAULT_FONT)
 
-        a6_index += 1
+    #     if a6_index % 8 == 7:
+    #         front_c.showPage()
+    #         back_c.showPage()
+    #         sheet_count += 1
+
+    #     a6_index += 1
 
     # 保存两个PDF
     front_c.save()
     back_c.save()
-
-    print(f"✅ 正面PDF生成完成！路径：{os.path.abspath(front_pdf)}")
-    print(f"✅ 背面PDF生成完成！路径：{os.path.abspath(back_pdf)}")
-    print(f"📝 从位置 0 到位置 {cursor} 的文本已被处理")
-    print(f"📝 原始文本长度: {len(text_content)}, 已处理长度: {cursor}")
-    print(f"📄 每个PDF共生成了 {sheet_count} 页")
-    
-    return front_pdf, back_pdf, sheet_count
+    return front_pdf, back_pdf, 0
 
 
 def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
@@ -311,18 +309,18 @@ def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
     # 读取两个PDF文件
     front_reader = PdfReader(front_pdf)
     back_reader = PdfReader(back_pdf)
-    
+
     writer = PdfWriter()
-    
+
     # 获取两个PDF的页数
     front_pages = len(front_reader.pages)
     back_pages = len(back_reader.pages)
-    
+
     # 取较小的页数进行合并
     min_pages = min(front_pages, back_pages)
-    
+
     print(f"开始合并PDF，正面{front_pages}页，背面{back_pages}页")
-    
+
     # 按照一页front，一页back的顺序合并
     for i in range(min_pages):
         # 添加正面页
@@ -330,7 +328,7 @@ def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
         # 添加背面页
         writer.add_page(back_reader.pages[i])
         print(f"已添加第{i+1}对页面")
-    
+
     # 如果正面或背面PDF页数更多，将剩余页面添加到合并后的PDF
     if front_pages > back_pages:
         for i in range(back_pages, front_pages):
@@ -340,11 +338,11 @@ def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
         for i in range(front_pages, back_pages):
             writer.add_page(back_reader.pages[i])
             print(f"已添加背面PDF的额外页面 {i+1}")
-    
+
     # 保存合并后的PDF
     with open(output_pdf, 'wb') as out_file:
         writer.write(out_file)
-    
+
     print(f"✅ PDF合并完成！路径：{os.path.abspath(output_pdf)}")
     print(f"📄 合并后的PDF共有 {len(writer.pages)} 页")
 
@@ -352,9 +350,7 @@ def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
 def main():
     if len(sys.argv) < 2:
         print("❌ 参数错误！正确用法：")
-        print(
-            f"python {os.path.basename(__file__)} <txt文件路径> [PDF路径]"
-        )
+        print(f"python {os.path.basename(__file__)} <txt文件路径> [PDF路径]")
         print("渲染顺序格式：用逗号分隔的'页码-位置'对，例如：0-0,0-1,1-0,1-1,0-2,0-3,1-2,1-3")
         print("页码从0开始（0=正面页，1=背面页），位置从0-3（左上=0，右上=1，左下=2，右下=3）")
         print("示例：")
@@ -383,14 +379,14 @@ def main():
     if len(sys.argv) >= 3:
         merge_pdf_path = sys.argv[2]
     print(f"渲染顺序：{render_order}")
-    
-    _, _, sheet_count = generate_custom_order_pdfs(input_txt_file, front_pdf_file,
-                                back_pdf_file, render_order)
-    
+
+    _, _, sheet_count = generate_custom_order_pdfs(input_txt_file,
+                                                   front_pdf_file,
+                                                   back_pdf_file, render_order)
+
     # 如果提供了合并PDF路径，则合并PDF
     if merge_pdf_path:
         merge_front_back_pdfs(front_pdf_file, back_pdf_file, merge_pdf_path)
-    
 
 
 if __name__ == "__main__":
