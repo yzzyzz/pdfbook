@@ -350,10 +350,10 @@ def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
 
 
 def main():
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 2:
         print("❌ 参数错误！正确用法：")
         print(
-            f"python {os.path.basename(__file__)} <txt文件路径> <正面PDF路径> <背面PDF路径> [渲染顺序] [合并PDF路径]"
+            f"python {os.path.basename(__file__)} <txt文件路径> [PDF路径]"
         )
         print("渲染顺序格式：用逗号分隔的'页码-位置'对，例如：0-0,0-1,1-0,1-1,0-2,0-3,1-2,1-3")
         print("页码从0开始（0=正面页，1=背面页），位置从0-3（左上=0，右上=1，左下=2，右下=3）")
@@ -367,8 +367,8 @@ def main():
 
     # 获取命令行参数
     input_txt_file = sys.argv[1]
-    front_pdf_file = sys.argv[2]
-    back_pdf_file = sys.argv[3]
+    front_pdf_file = "front.pdf"
+    back_pdf_file = "back.pdf"
 
     # 检查输入文件是否存在
     if not os.path.exists(input_txt_file):
@@ -378,11 +378,10 @@ def main():
         # 执行默认顺序的PDF生成
     render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2),
                     (0, 3)]
-    
     # 检查是否提供了合并PDF路径
     merge_pdf_path = None
-    if len(sys.argv) >= 5:
-        merge_pdf_path = sys.argv[4]
+    if len(sys.argv) >= 3:
+        merge_pdf_path = sys.argv[2]
     print(f"渲染顺序：{render_order}")
     
     _, _, sheet_count = generate_custom_order_pdfs(input_txt_file, front_pdf_file,
