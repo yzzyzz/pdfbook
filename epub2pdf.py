@@ -70,6 +70,13 @@ render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
 front_c = canvas.Canvas("front.pdf", pagesize=A4)
 back_c = canvas.Canvas("back.pdf", pagesize=A4)
 
+page_lr_margin = 2  # A4页面左右边距
+page_center_margin = 18
+
+a6_lr_margin = 0
+a6_tb_margin = 2
+
+
 # A6区域位置定义
 page_positions = [
     [  # 第1页
@@ -128,16 +135,16 @@ def draw_text_in_a6_region_with_cursor(
     canvas_obj.setFont(font_name, font_size)
     # 文本边距
     margin = MARGIN
-    available_width = A6_WIDTH - 2 * margin
-    available_height = A6_HEIGHT - 2 * margin
+    available_width = A6_WIDTH - 2 * a6_lr_margin - page_lr_margin - page_center_margin
+    available_height = A6_HEIGHT - 2 * a6_tb_margin 
 
     # 绘制文本行的高度
     line_height = font_size + TEXT_LINE_SPACE
     current_cursor = start_cursor
     print(f"从位置 {start_cursor} 开始绘制")
     # 从指定的光标位置开始绘制
-    text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - margin
-    text_x = cursor_x + x_offset if cursor_x is not None else x_offset + margin
+    text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - a6_tb_margin
+    text_x = cursor_x + x_offset if cursor_x is not None else x_offset + a6_lr_margin
     print(f"当前绘制位置：{text_x}, {text_y}")
     print(f"当前光标位置：{current_cursor}")
     print("  开始绘制文本:", text)
@@ -145,13 +152,12 @@ def draw_text_in_a6_region_with_cursor(
 
     while current_cursor < len(text):
         # 检查当前行是否还有足够的垂直空间
-        if (text_y - line_height) < (y_offset + margin):
+        if (text_y - line_height) < (y_offset + a6_tb_margin):
             # 没有足够空间绘制下一行，返回未完成状态
             return False, current_cursor, text_x, text_y
         # 找到当前行的文本
         line_start = current_cursor
         line_end = line_start
-
         # 计算当前行的可用宽度
         current_line_available_width = available_width
 
@@ -187,55 +193,28 @@ def draw_text_in_a6_region_with_cursor(
         else:
             actual_end = line_end
 
-        # 检查是否为章节标题（第x章 或 第x回 开头）
-        chapter_pattern = r'^第[一二三四五六七八九十零\d]+[章节回篇卷].*'
-        if re.match(chapter_pattern, current_line.strip()):
-            # 章节标题使用更大的字体并居中
-            title_font_size = 12
-            canvas_obj.setFont(font_name, title_font_size)
-            title_text = current_line.strip()
-            text_width = canvas_obj.stringWidth(title_text, font_name,
-                                                title_font_size)
+        if current_line:
+            text_width = canvas_obj.stringWidth(current_line, font_name,
+                                                font_size)
 
-            if text_width <= current_line_available_width:
-                # 居中显示
-                if align == "center":
-                    center_x = x_offset + (A6_WIDTH - text_width) / 2
-                else:
-                    center_x = x_offset + margin
-                canvas_obj.drawString(center_x, text_y - title_font_size,
-                                      title_text)
-                text_y -= title_font_size + TEXT_LINE_SPACE
-                # 恢复默认字体
-                canvas_obj.setFont(font_name, font_size)
-            else:
-                # 标题太长，无法显示，返回未完成状态
-                return False, current_cursor, text_x, text_y
-        else:
-            if current_line:
+            # 根据对齐方式计算x坐标
+            if align == "center":
+                line_x = x_offset + (A6_WIDTH - text_width) / 2
+            elif align == "right":
+                line_x = x_offset + A6_WIDTH - text_width - margin
+            else:  # left
+                line_x = x_offset + margin
 
-                text_width = canvas_obj.stringWidth(current_line, font_name,
-                                                    font_size)
-
-                # 根据对齐方式计算x坐标
-                if align == "center":
-                    line_x = x_offset + (A6_WIDTH - text_width) / 2
-                elif align == "right":
-                    line_x = x_offset + A6_WIDTH - text_width - margin
-                else:  # left
-                    line_x = x_offset + margin
-
-                canvas_obj.drawString(line_x, text_y - font_size, current_line)
-                print(f"绘制行：{current_line}")
-                canvas_obj.rect(x_offset,
-                                y_offset,
-                                A6_WIDTH,
-                                A6_HEIGHT,
-                                stroke=1,
-                                fill=0)
-            # 更新y坐标
-            text_y -= line_height
-
+            canvas_obj.drawString(line_x, text_y - font_size, current_line)
+            print(f"绘制行：{current_line}")
+            canvas_obj.rect(x_offset,
+                            y_offset,
+                            A6_WIDTH,
+                            A6_HEIGHT,
+                            stroke=1,
+                            fill=0)
+        # 更新y坐标
+        text_y -= line_height
         # 更新游标
         current_cursor = actual_end
         # 检查是否已经处理完整个文本
