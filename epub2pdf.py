@@ -326,12 +326,12 @@ def draw_html_in_a6_region(a6_index,
                         front_c.showPage()
                         back_c.showPage()
                     a6_index += 1
-                    print(f"未完成文本：{text_content[text_cursor:]}")
-                    front_c.showPage()
-                    back_c.showPage()
-                    front_c.save()
-                    back_c.save()
-                    exit(1)
+                    # print(f"未完成文本：{text_content[text_cursor:]}")
+                    # front_c.showPage()
+                    # back_c.showPage()
+                    # front_c.save()
+                    # back_c.save()
+                    # exit(1)
                 else:
                     text_cursor = 0
                     pass
