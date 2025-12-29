@@ -8,7 +8,7 @@ import os
 import sys
 
 zhongxianspace = 20
-book_name = "sdfsfsdf唇语"
+book_name = "纯欲解放区"
 
 # 注册中文字体
 try:
@@ -112,9 +112,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
 
     # 设置页面边距
-    margin = 20  # 页面边距
-    available_width = page_width - 2 * margin  # 可用宽度
-    available_height = page_height - 2 * margin  # 可用高度
+    margin = 0  # 页面边距
 
     current_x = margin  # 当前绘制的x坐标
     current_y = page_height - margin  # 当前绘制的y坐标（从页面顶部开始）
@@ -149,7 +147,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         c.drawImage(
             image_file,
             x=current_x,
-            y=current_y - scaled_h,  # 从当前y位置向下绘制
+            y=0,  # 从当前y位置向下绘制
             width=scaled_w,
             height=scaled_h,
             preserveAspectRatio=True,
@@ -162,7 +160,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         # 更新下一个图片的x坐标
         space_points = zhongxianspace * 72 / 25.4
         if text_x == 0:
-            text_x = current_x + scaled_w
+            text_x = a6_width - space_points/2
         current_x += scaled_w + space_points  # 加10点间距
 
     # 保存PDF文件
@@ -170,21 +168,12 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     # 绘制文字：
     # 绘制垂直方向的文字
     text_chars = list(book_name)
-    char_height = 12 + 2  # 字体大小 + 行间距
-    total_text_height = len(text_chars) * char_height
-    c.setFont(DEFAULT_FONT, 10)
-    # 如果文字总高度超过图片高度，则调整字体大小或截断文字
-    if total_text_height > scaled_h:
-        # 重新计算字体大小
-        new_font_size = scaled_h / len(text_chars) * 0.8  # 留一些边距
-        if new_font_size < 6:  # 最小字体大小
-            new_font_size = 6
-        char_height = new_font_size + 1
-
+    font_size = int(zhongxianspace * 1.4)
+    char_height = font_size + 2  # 字体大小 + 行间距
+    c.setFont(DEFAULT_FONT, font_size)
     # 计算起始y坐标，使文字垂直居中
-    start_y = page_height - (scaled_h / 2) + (len(text_chars) * char_height /
+    start_y =  (scaled_h / 2) + (len(text_chars) * char_height /
                                               2)
-
     # 绘制每个字符
     print(text_chars)
     for j, char in enumerate(text_chars):
