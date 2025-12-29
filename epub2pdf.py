@@ -124,10 +124,8 @@ def draw_text_in_a6_region_with_cursor(
     # 获取当前A6区域的物理位置
     x_offset, y_offset = page_positions[page_idx][pos_idx]
     
-    print(f"绘制A6区域 {a6_index}：{x_offset}, {y_offset}")
-
     # 设置字体
-    canvas_obj.setFont(font_name, 20)
+    canvas_obj.setFont(font_name, font_size)
     # 文本边距
     margin = MARGIN
     available_width = A6_WIDTH - 2 * margin
@@ -138,11 +136,13 @@ def draw_text_in_a6_region_with_cursor(
     current_cursor = start_cursor
     print(f"从位置 {start_cursor} 开始绘制")
     # 从指定的光标位置开始绘制
-    text_y = cursor_y if cursor_y is not None else y_offset + A6_HEIGHT - margin
-    text_x = cursor_x if cursor_x is not None else x_offset + margin
+    text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - margin
+    text_x = cursor_x + x_offset if cursor_x is not None else x_offset + margin
     print(f"当前绘制位置：{text_x}, {text_y}")
     print(f"当前光标位置：{current_cursor}")
+    print("  开始绘制文本:",text)
     # 逐行处理文本直到区域用完或文本处理完毕
+        
     while current_cursor < len(text):
         # 检查当前行是否还有足够的垂直空间
         if (text_y - line_height) < (y_offset + margin):
@@ -162,13 +162,10 @@ def draw_text_in_a6_region_with_cursor(
             if text[line_end] == '\n':
                 line_end += 1  # 包含换行符
                 break
-
             # 检查当前行的宽度
             test_line = text[line_start:line_end + 1]
-
             line_width = canvas_obj.stringWidth(test_line, font_name,
                                                 font_size)
-
             # 如果当前行宽度超过可用宽度，回退到上一个合适的断点
             if line_width > current_line_available_width:
                 if line_end == line_start:
@@ -188,7 +185,6 @@ def draw_text_in_a6_region_with_cursor(
 
         # 获取当前行文本
         current_line = text[line_start:line_end].rstrip('\n')
-        
         # 检查是否遇到段落分隔符
         if '\n' in current_line and current_line.endswith('\n'):
             # 如果当前行以换行符结尾，处理段落分隔
@@ -205,7 +201,6 @@ def draw_text_in_a6_region_with_cursor(
             # 章节标题使用更大的字体并居中
             title_font_size = 12
             canvas_obj.setFont(font_name, title_font_size)
-
             title_text = current_line.strip()
             text_width = canvas_obj.stringWidth(title_text, font_name,
                                                 title_font_size)
@@ -226,19 +221,8 @@ def draw_text_in_a6_region_with_cursor(
                 return False, current_cursor, text_x, text_y
         else:
             if current_line:
-                # 检查是否是新段落的开始
-                is_paragraph_start = (
-                    line_start == 0 or  # 文本开头
-                    (line_start >= 2
-                     and text[line_start - 2:line_start] == '\n\n')  # 段落分隔后
-                )
                 
-                display_line = current_line
-                if is_paragraph_start:
-                    # 添加段落缩进
-                    display_line = "    " + current_line
-
-                text_width = canvas_obj.stringWidth(display_line, font_name,
+                text_width = canvas_obj.stringWidth(current_line, font_name,
                                                     font_size)
 
                 # 根据对齐方式计算x坐标
@@ -249,16 +233,14 @@ def draw_text_in_a6_region_with_cursor(
                 else:  # left
                     line_x = x_offset + margin
 
-                canvas_obj.drawString(line_x, text_y - font_size, display_line)
-                print(f"绘制行：{display_line}")
-
+                canvas_obj.drawString(line_x, text_y - font_size, current_line)
+                print(f"绘制行：{current_line}")
                 canvas_obj.rect(x_offset,
                             y_offset,
                             A6_WIDTH,
                             A6_HEIGHT,
                             stroke=1,
                             fill=0)    
-                
             # 更新y坐标
             text_y -= line_height
 
@@ -329,10 +311,11 @@ def draw_html_in_a6_region(a6_index,
         if isinstance(element, str):
             pass
         elif element.name == "p":
-            text_content = element.text.strip()
+            text_content = "    "+element.text.strip()
             is_complete = False
             text_cursor = 0
-            print("text_content-----------:", text_content)
+            print(f"准备处理处理ttt text_content {text_content}")
+            print(f"页面:{a6_index} 绘制位置:{cursor_x}, {cursor_y}")
             while not is_complete:
                 is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
                     a6_index, text_content, text_cursor, cursor_x, cursor_y, font_size,
@@ -344,6 +327,12 @@ def draw_html_in_a6_region(a6_index,
                         front_c.showPage()
                         back_c.showPage()
                     a6_index += 1
+                    print(f"未完成文本：{text_content[text_cursor:]}")
+                    front_c.showPage()
+                    back_c.showPage()
+                    front_c.save()
+                    back_c.save()
+                    exit(1)
                 else:
                     text_cursor = 0
                     pass
