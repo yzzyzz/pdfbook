@@ -106,11 +106,8 @@ def draw_html_in_a6_region(a6_index,
     """ 
     # 解析HTML内容
     soup = BeautifulSoup(html_content, 'html.parser')
-
-    print(soup)
     # 文本边距
     margin = MARGIN
-
     # 获取当前要渲染的A6区域位置
     page_idx, pos_idx = render_order[a6_index % 8]
 
@@ -120,7 +117,7 @@ def draw_html_in_a6_region(a6_index,
     else:  # 背面页
         current_canvas = back_c
 
-    print(f"  渲染第 {a6_index+1} 个A6区域 (第{page_idx+1}页, 位置{pos_idx})")
+    # print(f"  渲染第 {a6_index+1} 个A6区域 (第{page_idx+1}页, 位置{pos_idx})")
 
     # 获取当前A6区域的物理位置
     x_offset, y_offset = page_positions[page_idx][pos_idx]
@@ -130,16 +127,11 @@ def draw_html_in_a6_region(a6_index,
         cursor_x = x_offset + margin
     if cursor_y is None:
         cursor_y = y_offset - margin  # 从顶部开始
-
-    # 绘制文本行的高度
-
     # 设置字体
     current_canvas.setFont(font_name, font_size)
-
     # 提取文本内容
-    text_content = soup.get_text()
-    lines = text_content.split('\n')
-
+    print(soup)
+    print(f"="*90)
     remaining_content = ""
     has_more_content = False
 
@@ -212,8 +204,6 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
 
     # 遍历EPUB的HTML内容
     for html_content in epub_html_iter(epub_path):
-        print(f"处理HTML内容: {html_content[:100]}...")  # 只打印前100个字符
-
         # 合并剩余内容和当前内容
         current_content = remaining_html + html_content if remaining_html else html_content
 
