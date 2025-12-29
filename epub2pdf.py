@@ -251,6 +251,13 @@ def draw_text_in_a6_region_with_cursor(
                 canvas_obj.drawString(line_x, text_y - font_size, display_line)
                 print(f"绘制行：{display_line}")
                 
+                canvas_obj.rect(x_offset,
+                            y_offset,
+                            A6_WIDTH,
+                            A6_HEIGHT,
+                            stroke=1,
+                            fill=0)
+                
                 front_c.showPage()
                 back_c.showPage()
                 front_c.save()
