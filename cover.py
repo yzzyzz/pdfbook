@@ -121,7 +121,8 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         print(f"绘制第 {i+1} 张图片: {os.path.basename(image_file)} 位置: x={current_x:.2f}, y={current_y - scaled_h:.2f}")
 
         # 更新下一个图片的x坐标
-        current_x += scaled_w + 10  # 加10点间距
+        space_points = zhongxianspace * 72 / 25.4
+        current_x += scaled_w + space_points  # 加10点间距
 
     # 保存PDF文件
     c.save()
