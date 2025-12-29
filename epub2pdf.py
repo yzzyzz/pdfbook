@@ -55,7 +55,6 @@ if os.path.exists(FONT_PATH):
 else:
     print(f"⚠️ 字体文件 {FONT_PATH} 不存在，使用默认字体")
     DEFAULT_FONT = "Helvetica"
-
 # A4页面尺寸（竖版）
 PAGE_WIDTH, PAGE_HEIGHT = A4
 # 每个A6区域尺寸
@@ -116,8 +115,10 @@ def draw_text_in_a6_region_with_cursor(
     # 选择当前应该渲染的画布（正面或背面）
     if page_idx == 0:  # 正面页
         canvas_obj = front_c
+        print("  绘制正面页")
     else:  # 背面页
         canvas_obj = back_c
+        print("  绘制背面页")
 
     # 获取当前A6区域的物理位置
     x_offset, y_offset = page_positions[page_idx][pos_idx]
@@ -125,7 +126,7 @@ def draw_text_in_a6_region_with_cursor(
     print(f"绘制A6区域 {a6_index}：{x_offset}, {y_offset}")
 
     # 设置字体
-    canvas_obj.setFont(font_name, 10)
+    canvas_obj.setFont(font_name, 20)
     # 文本边距
     margin = MARGIN
     available_width = A6_WIDTH - 2 * margin
@@ -231,7 +232,6 @@ def draw_text_in_a6_region_with_cursor(
                      and text[line_start - 2:line_start] == '\n\n')  # 段落分隔后
                 )
                 
-                
                 display_line = current_line
                 if is_paragraph_start:
                     # 添加段落缩进
@@ -250,6 +250,13 @@ def draw_text_in_a6_region_with_cursor(
 
                 canvas_obj.drawString(line_x, text_y - font_size, display_line)
                 print(f"绘制行：{display_line}")
+                
+                front_c.showPage()
+                back_c.showPage()
+                front_c.save()
+                back_c.save()
+                exit(0)
+                
                 
             # 更新y坐标
             text_y -= line_height
@@ -330,6 +337,8 @@ def draw_html_in_a6_region(a6_index,
                 is_complete, current_text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
                     a6_index, text_content, 0, cursor_x, cursor_y, font_size,
                     font_name)
+                
+                
                 if not is_complete:
                     cursor_x = None
                     cursor_y = None
@@ -365,6 +374,10 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
             font_name=DEFAULT_FONT)
 
     # 保存两个PDF
+    
+    front_c.showPage()
+    back_c.showPage()
+    
     front_c.save()
     back_c.save()
 
