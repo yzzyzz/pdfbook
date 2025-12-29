@@ -257,25 +257,16 @@ def draw_text_in_a6_region_with_cursor(
                             A6_WIDTH,
                             A6_HEIGHT,
                             stroke=1,
-                            fill=0)
-                
-                front_c.showPage()
-                back_c.showPage()
-                front_c.save()
-                back_c.save()
-                exit(0)
-                
+                            fill=0)    
                 
             # 更新y坐标
             text_y -= line_height
 
         # 更新游标
         current_cursor = actual_end
-
         # 检查是否已经处理完整个文本
         if current_cursor >= len(text):
-            # 文本处理完成
-            return True, current_cursor, text_x, text_y
+            return True, 0, 0, text_y - y_offset
 
     # 如果循环结束但文本未处理完，说明A6区域已满
     return False, current_cursor, text_x, text_y
@@ -345,15 +336,13 @@ def draw_html_in_a6_region(a6_index,
                 is_complete, current_text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
                     a6_index, text_content, 0, cursor_x, cursor_y, font_size,
                     font_name)
-                
-                
                 if not is_complete:
                     cursor_x = None
                     cursor_y = None
                     if a6_index % 8 == 7:
                         front_c.showPage()
                         back_c.showPage()
-                        a6_index += 1
+                    a6_index += 1
                 else:
                     pass
     return a6_index, cursor_x, cursor_y
