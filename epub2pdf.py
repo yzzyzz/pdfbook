@@ -252,8 +252,6 @@ def draw_html_in_a6_region(a6_index,
     def extract_elements_in_order(tag):
         """按文档顺序提取所有元素"""
         elements = []
-        # if tag.name and tag.name in ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'br','image']:
-        # 检查是否有子标签
         child_tags = [
             child for child in tag.children
             if hasattr(child, 'name') and child.name
