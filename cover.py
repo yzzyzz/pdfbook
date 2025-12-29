@@ -75,8 +75,8 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         scaled_h = img_h * scale
 
     # 计算居中位置
-    x = 0
-    y = 0
+    x = 50
+    y = 20
 
     # 绘制图片
     c.drawImage(image_file,
