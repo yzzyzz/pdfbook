@@ -61,7 +61,7 @@ PAGE_WIDTH, PAGE_HEIGHT = A4
 # 每个A6区域尺寸
 A6_WIDTH = PAGE_WIDTH / 2
 A6_HEIGHT = PAGE_HEIGHT / 2
-
+print("纸张高度:", PAGE_HEIGHT,"纸张宽度:", PAGE_WIDTH)
 # 文本渲染配置
 TEXT_FONT_SIZE = 12
 TEXT_LINE_SPACE = 3
@@ -126,7 +126,6 @@ def draw_text_in_a6_region_with_cursor(
 
     # 设置字体
     canvas_obj.setFont(font_name, 10)
-
     # 文本边距
     margin = MARGIN
     available_width = A6_WIDTH - 2 * margin
@@ -136,10 +135,11 @@ def draw_text_in_a6_region_with_cursor(
     line_height = font_size + TEXT_LINE_SPACE
     current_cursor = start_cursor
     print(f"从位置 {start_cursor} 开始绘制")
-    exit(0)
     # 从指定的光标位置开始绘制
-    text_y = cursor_y
+    text_y = cursor_y if cursor_y is not None else y_offset + margin
     text_x = cursor_x if cursor_x is not None else x_offset + margin
+    print(f"当前绘制位置：{text_x}, {text_y}")
+    exit(0)
 
     # 逐行处理文本直到区域用完或文本处理完毕
     while current_cursor < len(text):
@@ -317,12 +317,9 @@ def draw_html_in_a6_region(a6_index,
             all_elements.extend(extract_elements_in_order(child))
         elif hasattr(child, 'strip') and child.strip():  # 是文本节点
             all_elements.append(str(child).strip())
-
     print("all_elements")
-
-    remaining_content = ""
-    current_x = cursor_x
-    current_y = cursor_y
+    print(cursor_x)
+    exit(0)
     # 处理提取出的元素，保持文档顺序
     for element in all_elements:
         print(element)
@@ -333,14 +330,18 @@ def draw_html_in_a6_region(a6_index,
             is_complete = False
             print("text_content-----------:", text_content)
             while not is_complete:
-                is_complete, current_text_cursor, current_x, current_y = draw_text_in_a6_region_with_cursor(
+                is_complete, current_text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
                     a6_index, text_content, 0, cursor_x, cursor_y, font_size,
                     font_name)
                 if not is_complete:
+                    cursor_x = None
+                    cursor_y = None
                     if a6_index % 8 == 7:
                         front_c.showPage()
                         back_c.showPage()
                         a6_index += 1
+                else:
+                    pass
     return a6_index, current_x, current_y
 
 
@@ -354,8 +355,8 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     """
 
     a6_index = 0
-    cursor_x = 0  # 初始化游标
-    cursor_y = A6_HEIGHT  # 初始化游标
+    cursor_x = None  # 初始化游标
+    cursor_y = None  # 初始化游标
     # 遍历EPUB的HTML内容
     for html_content in epub_html_iter(epub_path):
         # 合并剩余内容和当前内容
