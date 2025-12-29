@@ -136,11 +136,10 @@ def draw_text_in_a6_region_with_cursor(
     current_cursor = start_cursor
     print(f"从位置 {start_cursor} 开始绘制")
     # 从指定的光标位置开始绘制
-    text_y = cursor_y if cursor_y is not None else y_offset + margin
+    text_y = cursor_y if cursor_y is not None else y_offset + A6_HEIGHT - margin
     text_x = cursor_x if cursor_x is not None else x_offset + margin
     print(f"当前绘制位置：{text_x}, {text_y}")
-    exit(0)
-
+    print(f"当前光标位置：{current_cursor}")
     # 逐行处理文本直到区域用完或文本处理完毕
     while current_cursor < len(text):
         # 检查当前行是否还有足够的垂直空间
@@ -187,7 +186,7 @@ def draw_text_in_a6_region_with_cursor(
 
         # 获取当前行文本
         current_line = text[line_start:line_end].rstrip('\n')
-
+        
         # 检查是否遇到段落分隔符
         if '\n' in current_line and current_line.endswith('\n'):
             # 如果当前行以换行符结尾，处理段落分隔
@@ -224,7 +223,6 @@ def draw_text_in_a6_region_with_cursor(
                 # 标题太长，无法显示，返回未完成状态
                 return False, current_cursor, text_x, text_y
         else:
-            # 普通文本处理
             if current_line:
                 # 检查是否是新段落的开始
                 is_paragraph_start = (
@@ -232,7 +230,8 @@ def draw_text_in_a6_region_with_cursor(
                     (line_start >= 2
                      and text[line_start - 2:line_start] == '\n\n')  # 段落分隔后
                 )
-
+                
+                
                 display_line = current_line
                 if is_paragraph_start:
                     # 添加段落缩进
@@ -250,7 +249,8 @@ def draw_text_in_a6_region_with_cursor(
                     line_x = x_offset + margin
 
                 canvas_obj.drawString(line_x, text_y - font_size, display_line)
-
+                print(f"绘制行：{display_line}")
+                
             # 更新y坐标
             text_y -= line_height
 
