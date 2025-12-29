@@ -66,237 +66,174 @@ A6_HEIGHT = PAGE_HEIGHT / 2
 TEXT_FONT_SIZE = 10
 TEXT_LINE_SPACE = 3
 MARGIN = 10  # 区域内边距
+render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
+# 初始化两个PDF画布（A4竖版）
+front_c = canvas.Canvas("front.pdf", pagesize=A4)
+back_c = canvas.Canvas("back.pdf", pagesize=A4)
+
+# A6区域位置定义
+page_positions = [
+    [  # 第1页
+        (0, A6_HEIGHT),  # 物理位置：左上 (索引0)
+        (A6_WIDTH, A6_HEIGHT),  # 物理位置：右上 (索引1)
+        (0, 0),  # 物理位置：左下 (索引2)
+        (A6_WIDTH, 0)  # 物理位置：右下 (索引3)
+    ],
+    [  # 第2页
+        (0, A6_HEIGHT),  # 物理位置：左上 (索引0)
+        (A6_WIDTH, A6_HEIGHT),  # 物理位置：右上 (索引1)
+        (0, 0),  # 物理位置：左下 (索引2)
+        (A6_WIDTH, 0)  # 物理位置：右下 (索引3)
+    ]
+]
 
 
-def draw_text_in_a6_region_with_cursor(canvas_obj,
-                                       text,
-                                       start_cursor,
-                                       x,
-                                       y,
-                                       width,
-                                       height,
-                                       font_size=TEXT_FONT_SIZE,
-                                       font_name=DEFAULT_FONT):
+def draw_html_in_a6_region(a6_index,
+                           html_content,
+                           cursor_x=None,
+                           cursor_y=None,
+                           font_size=TEXT_FONT_SIZE,
+                           font_name=DEFAULT_FONT):
     """
-    在指定的A6区域内绘制文本，使用游标模式
-    :param canvas_obj: PDF画布对象
-    :param text: 完整文本内容
-    :param start_cursor: 开始位置游标
-    :param x: 区域左下角x坐标
-    :param y: 区域左下角y坐标
-    :param width: 区域宽度
-    :param height: 区域高度
-    :param font_size: 字体大小
-    :param font_name: 字体名称
-    :return: (end_cursor, has_more_text) - 结束游标位置和是否还有更多文本
-    """
-    # 设置字体
-    canvas_obj.setFont(font_name, font_size)
+    draw_html_in_a6_region 的 Docstring
+    
+    :param a6_index: 
+    :param html_content: 说明
+    :param cursor_x: 说明
+    :param cursor_y: 说明
+    :param font_size: 说明
+    :param font_name: 说明
+    """ 
+    # 解析HTML内容
+    soup = BeautifulSoup(html_content, 'html.parser')
 
+    print(soup)
     # 文本边距
     margin = MARGIN
-    available_width = width - 2 * margin
-    available_height = height - 2 * margin
 
-    # 绘制文本行
-    text_y = y + height - margin  # 从顶部开始
-    line_height = font_size + TEXT_LINE_SPACE
+    # 获取当前要渲染的A6区域位置
+    page_idx, pos_idx = render_order[a6_index % 8]
 
-    current_cursor = start_cursor
+    # 选择当前应该渲染的画布（正面或背面）
+    if page_idx == 0:  # 正面页
+        current_canvas = front_c
+    else:  # 背面页
+        current_canvas = back_c
 
-    # 逐行处理文本直到区域用完或文本处理完毕
-    while current_cursor < len(text) and (text_y - line_height) >= (y +
-                                                                    margin):
-        # 检查是否是新段落的开始
-        # 检查是否是段落开头（在游标位置之前的前两个字符是'\n\n'，或游标在文本开头）
-        is_paragraph_start = (
-            current_cursor == 0 or  # 文本开头
-            (current_cursor >= 2
-             and text[current_cursor - 2:current_cursor] == '\n\n')  # 段落分隔后
-        )
+    print(f"  渲染第 {a6_index+1} 个A6区域 (第{page_idx+1}页, 位置{pos_idx})")
 
-        # 找到当前行的文本
-        line_start = current_cursor
-        line_end = line_start
+    # 获取当前A6区域的物理位置
+    x_offset, y_offset = page_positions[page_idx][pos_idx]
 
-        # 确定当前行是否需要缩进，计算可用宽度
-        if is_paragraph_start:
-            indent_text = "    "  # 4个空格缩进
-            current_line_available_width = available_width - canvas_obj.stringWidth(
-                indent_text, font_name, font_size)
-        else:
-            current_line_available_width = available_width
+    # 设置起始绘制位置
+    if cursor_x is None:
+        cursor_x = x_offset + margin
+    if cursor_y is None:
+        cursor_y = y_offset - margin  # 从顶部开始
 
-        # 寻找合适的换行点
-        while line_end < len(text):
-            # 检查是否遇到换行符
-            if text[line_end] == '\n':
-                line_end += 1  # 包含换行符
-                break
+    # 绘制文本行的高度
 
-            # 检查当前行的宽度
-            test_line = text[line_start:line_end + 1]
-            # 检查是否新段落开始
-            if '\n\n' in test_line and test_line.rindex(
-                    '\n\n') == len(test_line) - 2:
-                # 如果当前行包含段落结束符，截断到段落结束符
-                line_end = line_start + test_line.rindex('\n\n')
-                break
+    # 设置字体
+    current_canvas.setFont(font_name, font_size)
 
-            line_width = canvas_obj.stringWidth(test_line, font_name,
-                                                font_size)
+    # 提取文本内容
+    text_content = soup.get_text()
+    lines = text_content.split('\n')
 
-            # 如果当前行宽度超过可用宽度，回退到上一个合适的断点
-            if line_width > current_line_available_width:
-                if line_end == line_start:
-                    # 单个字符就超宽，强制换行
-                    line_end += 1
-                    break
-                else:
-                    # 找到上一个空格作为断点
-                    space_pos = test_line.rfind(' ')
-                    if space_pos > 0:
-                        line_end = line_start + space_pos + 1
-                    else:
-                        # 没有空格，强制在当前字符处断开
-                        line_end -= 1
-                    break
-            else:
-                line_end += 1
+    remaining_content = ""
+    has_more_content = False
 
-        # 获取当前行文本
-        current_line = text[line_start:line_end].rstrip('\n')
+    # for i, line in enumerate(lines):
+    #     if not line.strip():
+    #         continue
 
-        # 检查是否遇到段落分隔符
-        if '\n\n' in current_line:
-            paragraph_end_pos = current_line.index('\n\n')
-            current_line = current_line[:paragraph_end_pos]
-            # 修正游标位置，确保下一次处理从新段落开始
-            actual_end = line_start + paragraph_end_pos + 2  # 加上'\n\n'的长度
-        else:
-            actual_end = line_end
+    #     # 普通文本处理
+    #     words = line.split()
+    #     current_line = ""
 
-        # 绘制当前行
-        if current_line:
-            # 检查是否为章节标题（第x章 或 第x回 开头）
-            chapter_pattern = r'^第[一二三四五六七八九十零\d]+[章节回篇卷].*'
-            if re.match(chapter_pattern, current_line.strip()):
-                # 设置章节标题字体大小
-                title_font_size = 12
-                canvas_obj.setFont(font_name, title_font_size)
+    #     for word in words:
+    #         test_line = current_line + " " + word if current_line else word
+    #         line_width = current_canvas.stringWidth(test_line, font_name,
+    #                                             font_size)
 
-                # 居中显示
-                text_width = canvas_obj.stringWidth(current_line, font_name,
-                                                    title_font_size)
-                center_x = x + (width - text_width) / 2
-                text_y -= line_height
-                canvas_obj.drawString(center_x, text_y - title_font_size,
-                                      current_line)
-                # 恢复默认字体大小
-                canvas_obj.setFont(font_name, font_size)
-            else:
-                # 普通文本处理
-                if is_paragraph_start:
-                    # 第一行添加缩进
-                    indented_line = "    " + current_line  # 4个空格缩进
-                    canvas_obj.drawString(x + margin, text_y - font_size,
-                                          indented_line)
-                else:
-                    # 非第一行不添加缩进
-                    canvas_obj.drawString(x + margin, text_y - font_size,
-                                          current_line)
+    #         if line_width <= available_width:
+    #             current_line = test_line
+    #         else:
+    #             # 当前行已满，绘制当前行
+    #             required_height = font_size + TEXT_LINE_SPACE
+    #             if (cursor_y - required_height) >= (y + margin):
+    #                 current_canvas.drawString(cursor_x - margin,
+    #                                         cursor_y - font_size,
+    #                                         current_line)
+    #                 cursor_y -= required_height
+    #                 current_line = word
+    #             else:
+    #                 # 没有足够空间，保存剩余内容
+    #                 remaining_words = [current_line] + [
+    #                     word
+    #                 ] + words[words.index(word) + 1:]
+    #                 remaining_content += " ".join(
+    #                     remaining_words) + "\n" + "\n".join(lines[i + 1:])
+    #                 has_more_content = True
+    #                 break
 
-        # 更新游标和Y坐标
-        current_cursor = actual_end
-        text_y -= line_height
+    #     # 绘制最后的行
+    #     if current_line and not has_more_content:
+    #         required_height = font_size + TEXT_LINE_SPACE
+    #         if (cursor_y - required_height) >= (y + margin):
+    #             current_canvas.drawString(cursor_x - margin,
+    #                                     cursor_y - font_size, current_line)
+    #             cursor_y -= required_height
+    #         else:
+    #             remaining_content += current_line + "\n" + "\n".join(
+    #                 lines[i + 1:])
+    #             has_more_content = True
+    #             break
 
-        # 检查是否已经处理完整个文本
-        if current_cursor >= len(text):
-            break
-
-    # 返回结束游标和是否还有更多文本
-    has_more_text = current_cursor < len(text)
-    return current_cursor, has_more_text
+    # 返回下次绘制的位置
+    next_x = cursor_x
+    next_y = cursor_y
+    return a6_index, next_x, next_y
 
 
-def generate_custom_order_pdfs(text_file_path, front_pdf, back_pdf,
-                               render_order):
+def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
+    """
+    从EPUB文件生成两个PDF（正面和背面），按照自定义顺序交替渲染内容
+    :param epub_path: EPUB文件路径
+    :param front_pdf: 正面PDF文件路径
+    :param back_pdf: 背面PDF文件路径
+    :param render_order: 渲染顺序列表，包含8个元素，每个元素是(页码, 位置索引)的元组
+    """
 
-    # 初始化两个PDF画布（A4竖版）
-    front_c = canvas.Canvas(front_pdf, pagesize=A4)
-    back_c = canvas.Canvas(back_pdf, pagesize=A4)
+    a6_index = 0
+    cursor_x = 0  # 初始化游标
+    cursor_y = A6_HEIGHT  # 初始化游标
+    remaining_html = ""
 
-    # A6区域位置定义
-    page_positions = [
-        [  # 第1页
-            (0, A6_HEIGHT),  # 物理位置：左上 (索引0)
-            (A6_WIDTH, A6_HEIGHT),  # 物理位置：右上 (索引1)
-            (0, 0),  # 物理位置：左下 (索引2)
-            (A6_WIDTH, 0)  # 物理位置：右下 (索引3)
-        ],
-        [  # 第2页
-            (0, A6_HEIGHT),  # 物理位置：左上 (索引0)
-            (A6_WIDTH, A6_HEIGHT),  # 物理位置：右上 (索引1)
-            (0, 0),  # 物理位置：左下 (索引2)
-            (A6_WIDTH, 0)  # 物理位置：右下 (索引3)
-        ]
-    ]
+    # 遍历EPUB的HTML内容
+    for html_content in epub_html_iter(epub_path):
+        print(f"处理HTML内容: {html_content[:100]}...")  # 只打印前100个字符
 
-    # cursor = 0  # 初始化游标
-    # has_more_text = True
-    # sheet_count = 0  # 双面打印对计数器
-    # a6_index = 0
+        # 合并剩余内容和当前内容
+        current_content = remaining_html + html_content if remaining_html else html_content
 
-    # 遍历迭代器
-    for i, html in enumerate(epub_html_iter(text_file_path), start=1):
-        print(f"===== 第 {i} 章 =====")
-        print(html)  # 只打印前 500 个字符，避免输出过长
-        print("=" * 60)
-
-    # while has_more_text:
-    #     print(f"正在处理第 {sheet_count + 1} 个双面打印对...")
-    #     page_idx, pos_idx = render_order[a6_index % 8]
-    #     # 选择当前应该渲染的画布（正面或背面）
-    #     if page_idx == 0:  # 正面页
-    #         current_canvas = front_c
-    #     else:  # 背面页
-    #         current_canvas = back_c
-
-    #     print(f"  渲染第 {a6_index} 个A6区域 (第{page_idx+1}页, 位置{pos_idx})")
-
-    #     # 获取当前A6区域的物理位置
-    #     x_offset, y_offset = page_positions[page_idx][pos_idx]
-
-    #     # 绘制A6区域边框（可选，便于查看布局）
-    #     current_canvas.rect(x_offset,
-    #                         y_offset,
-    #                         A6_WIDTH,
-    #                         A6_HEIGHT,
-    #                         stroke=1,
-    #                         fill=0)
-
-    #     # 在A6区域内绘制文本，并更新游标
-    #     cursor, has_more_text = draw_text_in_a6_region_with_cursor(
-    #         canvas_obj=current_canvas,
-    #         text=text_content,
-    #         start_cursor=cursor,
-    #         x=x_offset,
-    #         y=y_offset,
-    #         width=A6_WIDTH,
-    #         height=A6_HEIGHT,
-    #         font_name=DEFAULT_FONT)
-
-    #     if a6_index % 8 == 7:
-    #         front_c.showPage()
-    #         back_c.showPage()
-    #         sheet_count += 1
-
-    #     a6_index += 1
+        # 在A6区域内绘制HTML内容
+        a6_index, cursor_x, cursor_y = draw_html_in_a6_region(
+            a6_index == a6_index,
+            html_content=current_content,
+            cursor_x=cursor_x,
+            cursor_y=cursor_y,
+            font_name=DEFAULT_FONT)
 
     # 保存两个PDF
     front_c.save()
     back_c.save()
-    return front_pdf, back_pdf, 0
+
+    print(f"✅ 正面PDF生成完成！路径：{os.path.abspath(front_pdf)}")
+    print(f"✅ 背面PDF生成完成！路径：{os.path.abspath(back_pdf)}")
+    print(f"📄 总共渲染了 {a6_index} 个A6区域")
+
+    return front_pdf, back_pdf, a6_index
 
 
 def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
@@ -350,39 +287,31 @@ def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
 def main():
     if len(sys.argv) < 2:
         print("❌ 参数错误！正确用法：")
-        print(f"python {os.path.basename(__file__)} <txt文件路径> [PDF路径]")
-        print("渲染顺序格式：用逗号分隔的'页码-位置'对，例如：0-0,0-1,1-0,1-1,0-2,0-3,1-2,1-3")
-        print("页码从0开始（0=正面页，1=背面页），位置从0-3（左上=0，右上=1，左下=2，右下=3）")
+        print(f"python {os.path.basename(__file__)} <epub文件路径> [PDF路径]")
         print("示例：")
-        print(
-            f"python {os.path.basename(__file__)} ./input.txt ./front.pdf ./back.pdf 0-3,0-0,1-0,1-1,0-2,0-1,1-2,1-3 ./all.pdf"
-        )
-        print("如不提供渲染顺序，则按默认顺序处理")
-        print("如不提供合并PDF路径，则只生成正面和背面PDF")
+        print(f"python {os.path.basename(__file__)} ./book.epub ./output.pdf")
         sys.exit(1)
 
     # 获取命令行参数
-    input_txt_file = sys.argv[1]
+    epub_path = sys.argv[1]
     front_pdf_file = "front.pdf"
     back_pdf_file = "back.pdf"
 
     # 检查输入文件是否存在
-    if not os.path.exists(input_txt_file):
-        print(f"❌ 输入文件不存在：{input_txt_file}")
+    if not os.path.exists(epub_path):
+        print(f"❌ 输入文件不存在：{epub_path}")
         sys.exit(1)
-        # 按照可读顺序来搞定 0 1 2 3  4 5 6 7 ->
-        # 执行默认顺序的PDF生成
-    render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2),
-                    (0, 3)]
+
+    # 默认渲染顺序
+
     # 检查是否提供了合并PDF路径
     merge_pdf_path = None
     if len(sys.argv) >= 3:
         merge_pdf_path = sys.argv[2]
     print(f"渲染顺序：{render_order}")
 
-    _, _, sheet_count = generate_custom_order_pdfs(input_txt_file,
-                                                   front_pdf_file,
-                                                   back_pdf_file, render_order)
+    _, _, total_a6_regions = generate_custom_order_pdfs(
+        epub_path, front_pdf_file, back_pdf_file)
 
     # 如果提供了合并PDF路径，则合并PDF
     if merge_pdf_path:
