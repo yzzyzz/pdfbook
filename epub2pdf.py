@@ -165,7 +165,6 @@ def draw_text_in_a6_region_with_cursor(
     # 文本边距
     margin = MARGIN
     available_width = A6_WIDTH - 2 * a6_lr_margin - page_lr_margin - page_center_margin
-    available_height = A6_HEIGHT - 2 * a6_tb_margin
 
     # 绘制文本行的高度
     line_height = font_size + TEXT_LINE_SPACE
@@ -192,7 +191,7 @@ def draw_text_in_a6_region_with_cursor(
         line_start = current_cursor
         line_end = line_start
         # 计算当前行的可用宽度
-        current_line_available_width = available_width
+        current_line_available_width = available_width + 8
 
         # 寻找合适的换行点
         while line_end < len(text):
