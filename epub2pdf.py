@@ -21,8 +21,15 @@ def check_is_title(str):
         return False
     # 去除首尾空白
     text = str.strip()
+    
+    # 检查是否只包含中文数字
+    chinese_numbers = set('零一二三四五六七八九十百千万亿○')
+    if all(c in chinese_numbers for c in text if c.strip()):
+        return True
+    
     # 1. 检查字符串中是否含有空格（可能是标题）
     has_space = ' ' in text or '　' in text  # 包括全角空格
+    
     # 2. 检查是否以"第x章"、"第x节"、"第x卷"等开头
     chapter_patterns = [
         r'^第[一二三四五六七八九十零\d]+[章节卷篇回].*',  # 第x章、第x节、第x卷、第x篇、第x回
@@ -71,7 +78,6 @@ def check_is_title(str):
     
     return False
 
-
 def epub_html_iter(epub_path):
     """
     按文档顺序返回 HTML 迭代器
@@ -106,7 +112,7 @@ A6_REGIONS_PER_PAGE = 4  # 每页4个A6区域（2x2布局）
 
 # 注册字体
 FONT_NAME = "FangSong"
-FONT_PATH = os.path.dirname(os.path.abspath(__file__)) + "/fzss.ttf"
+FONT_PATH = os.path.dirname(os.path.abspath(__file__)) + "/FZXSS-Lusitana-Hybrid.ttf"
 
 # 检查字体文件是否存在
 if os.path.exists(FONT_PATH):
@@ -126,7 +132,7 @@ TEXT_FONT_SIZE = 10
 title_size = TEXT_FONT_SIZE + 3
 
 PAGE_NUMBER_FONT_SIZE = 8
-TEXT_LINE_SPACE = 3
+TEXT_LINE_SPACE = 4
 MARGIN = 10  # 区域内边距
 render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
 # 初始化两个PDF画布（A4竖版）
@@ -161,7 +167,7 @@ def new_page():
 page_lr_margin = 16  # A4页面左右边距
 page_center_margin = 18
 a6_lr_margin = 0
-a6_tb_margin = 8
+a6_tb_margin = 10
 print_page_number = True
 
 # A6区域位置定义
@@ -201,7 +207,7 @@ def draw_page_number(a6_index):
     x_offset, y_offset = page_positions[page_idx][pos_idx]
 
     tt_x = x_offset + A6_WIDTH - page_center_margin - a6_lr_margin - 10 if a6_index % 2 == 0 else x_offset + a6_lr_margin + page_center_margin
-    tt_y = y_offset + 6
+    tt_y = y_offset + 8
     # 设置字体
     canvas_obj.setFont(DEFAULT_FONT, PAGE_NUMBER_FONT_SIZE)
     canvas_obj.drawString(
@@ -328,7 +334,10 @@ def draw_text_in_a6_region_with_cursor(
             print(f"绘制行：{current_line}")
 
         # 更新y坐标
-        text_y -= line_height
+        if font_size > TEXT_FONT_SIZE:
+            text_y -= line_height + 3
+        else:
+            text_y -= line_height
         # 更新游标
         current_cursor = actual_end
         # 检查是否已经处理完整个文本
@@ -487,7 +496,7 @@ def draw_html_in_a6_region(a6_index,
             if check_is_title(element.text.strip()):
                 text_content = element.text.strip()
             else:
-                text_content = "    " + element.text.strip()
+                text_content = "      " + element.text.strip()
             is_complete = False
             text_cursor = 0
             print(f"准备处理处理 text_content {text_content}")
