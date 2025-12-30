@@ -9,9 +9,79 @@ from PIL import Image
 import os
 import sys
 from PIL import Image, ImageDraw, ImageFont
+import configparser
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
+
+
+def load_config(config_file):
+    """
+    从配置文件加载配置
+    :param config_file: 配置文件路径
+    :return: 配置对象
+    """
+    config = configparser.ConfigParser()
+    
+    # 设置默认值
+    config['page'] = {
+        'print_page_size': 'A5',
+        'current_image_mode': 'portrait',
+        'current_a5_image_count': '1',
+        'line_width': '1',
+        'lr_padding': '16',
+        'center_padding': '16',
+        'pre_none': '0',
+        'start_index_offset': '-5',
+        'print_page_index': 'true',
+        'fold_mode': '2'
+    }
+    
+    # 读取配置文件
+    if os.path.exists(config_file):
+        config.read(config_file, encoding='utf-8')
+    else:
+        print(f"配置文件 {config_file} 不存在，使用默认配置")
+        # 创建默认配置文件
+        with open(config_file, 'w', encoding='utf-8') as f:
+            config.write(f)
+        print(f"已创建默认配置文件: {config_file}")
+    
+    # 从配置中读取参数
+    global print_page_size, CURRENT_A5_IMAGE_COUNT
+    global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
+    global print_page_index, fold_mode, A5_SEQ_MAP
+    
+    # 读取配置参数
+    page_size_name = config.get('page', 'print_page_size', fallback='A5')
+    if page_size_name == 'A5':
+        print_page_size = A5
+    else:
+        print_page_size = A4  # 默认为A4
+        
+    CURRENT_A5_IMAGE_COUNT = config.getint('page', 'current_a5_image_count', fallback=1)
+    LINE_WIDTH = config.getint('page', 'line_width', fallback=1)
+    lr_padding = config.getint('page', 'lr_padding', fallback=16)
+    center_padding = config.getint('page', 'center_padding', fallback=16)
+    PRE_NONE = config.getint('page', 'pre_none', fallback=0)
+    start_index_offset = config.getint('page', 'start_index_offset', fallback=-5)
+    print_page_index = config.getboolean('page', 'print_page_index', fallback=True)
+    fold_mode = config.getint('page', 'fold_mode', fallback=2)
+    
+    # 根据fold_mode设置A5_SEQ_MAP
+    if fold_mode == 1:
+        A5_SEQ_MAP = [1, 4, 3, 2]
+    else:
+        A5_SEQ_MAP = [4, 1, 2, 3]
+
+    print(f"配置信息：")
+    print(f"  - 页面尺寸: {page_size_name}")
+    print(f"  - 每个A5页面图片数: {CURRENT_A5_IMAGE_COUNT}")
+    print(f"  - 边距: 左右={lr_padding}, 中心={center_padding}")
+    print(f"  - 打印页码: {print_page_index}")
+    print(f"  - 页码偏移: {print_page_index}")
+    
+    return config
 
 
 def is_landscape_image(image_path):
@@ -535,18 +605,22 @@ if __name__ == "__main__":
     # 检查命令行参数数量
     if len(sys.argv) != 4:
         print("❌ 参数错误！正确用法：")
-        print(f"python {os.path.basename(__file__)} <图片文件夹路径> <输出PDF文件路径>")
+        print(f"python {os.path.basename(__file__)} <图片文件夹路径> <输出PDF文件路径> <配置文件路径>")
         print("示例：")
-        print(f"python {os.path.basename(__file__)} ./images ./output.pdf")
+        print(f"python {os.path.basename(__file__)} ./images ./output.pdf config.ini")
         sys.exit(1)
 
     # 获取命令行参数
     input_folder = sys.argv[1]
     output_file = sys.argv[2]
-    CURRENT_A5_IMAGE_COUNT = int(sys.argv[3])
+    config_file = sys.argv[3]
+    
+    # 加载配置
+    config = load_config(config_file)
+    
     # 执行PDF生成
     try:
-        generate_pdf_from_images(input_folder, output_file, print_page_size)
+        generate_pdf_from_images(input_folder, output_file, config, print_page_size)
     except Exception as e:
         print(f"\n❌ 生成失败：{str(e)}")
         sys.exit(1)
