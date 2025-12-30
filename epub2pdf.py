@@ -426,7 +426,7 @@ def draw_html_in_a6_region(a6_index,
             text_content = "    " + element.text.strip()
             is_complete = False
             text_cursor = 0
-            print(f"准备处理处理ttt text_content {text_content}")
+            print(f"准备处理处理 text_content {text_content}")
             print(f"页面:{a6_index} 绘制位置:{cursor_x}, {cursor_y}")
             while not is_complete:
                 is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
@@ -467,6 +467,29 @@ def draw_html_in_a6_region(a6_index,
             a6_index += 1
             cursor_y = None
             text_cursor = 0
+        elif element.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+            text_content = element.text.strip()
+            is_complete = False
+            text_cursor = 0
+            print(f"准备处理处理 标题 {text_content}")
+            exit(1)
+            print(f"页面:{a6_index} 绘制位置:{cursor_x}, {cursor_y}")
+            while not is_complete:
+                is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
+                    a6_index, text_content, text_cursor, cursor_x, cursor_y,
+                    font_size + 3, font_name, "center")
+                if not is_complete:
+                    cursor_x = None
+                    cursor_y = None
+                    if print_page_number:
+                        draw_page_number(a6_index)
+                    if a6_index % 8 == 7:
+                        new_page()
+                    a6_index += 1
+                else:
+                    text_cursor = 0
+                    pass
+
     return a6_index, cursor_x, cursor_y
 
 
