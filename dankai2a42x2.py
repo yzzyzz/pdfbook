@@ -96,10 +96,10 @@ print_page_size = A5
 CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
-lr_padding = 8
+lr_padding = 16
 center_padding = 16
 PRE_NONE = 0
-start_index_offset = 1
+start_index_offset = -5
 print_page_index = True
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
@@ -349,28 +349,30 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         # 添加页码（如果提供了页码）
         if page_number is not None and print_page_index:
             # 设置字体和大小
-            canvas_obj.setFont("Helvetica", 6)
-            # 设置字体颜色为黑色
-            canvas_obj.setFillColorRGB(0, 0, 0)
+            show_number = page_number - PRE_NONE + start_index_offset
+            if show_number > 0:
+                canvas_obj.setFont("Helvetica", 6)
+                # 设置字体颜色为黑色
+                canvas_obj.setFillColorRGB(0, 0, 0)
 
-            page_number_text = str(page_number - PRE_NONE + start_index_offset)
-            text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
-                                                6)
+                page_number_text = str(page_number - PRE_NONE + start_index_offset)
+                text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
+                                                    6)
 
-            if fold_mode == 1:
-                if a5_index % 2 == 1:
-                    page_x = x_offset + 12
-                # 页码放在A5区域的右下角
+                if fold_mode == 1:
+                    if a5_index % 2 == 1:
+                        page_x = x_offset + 12
+                    # 页码放在A5区域的右下角
+                    else:
+                        page_x = x_offset + a5_width - text_width - 12
                 else:
-                    page_x = x_offset + a5_width - text_width - 12
-            else:
-                if a5_index % 2 == 1:
-                    page_x = x_offset + 8 + center_padding
-                # 页码放在A5区域的右下角
-                else:
-                    page_x = x_offset + a5_width - text_width - 8 - center_padding
-            page_y = y_offset + 2
-            canvas_obj.drawString(page_x, page_y, page_number_text)
+                    if a5_index % 2 == 1:
+                        page_x = x_offset + 4 + center_padding
+                    # 页码放在A5区域的右下角
+                    else:
+                        page_x = x_offset + a5_width - text_width - 4 - center_padding
+                page_y = y_offset + 3
+                canvas_obj.drawString(page_x, page_y, page_number_text)
 
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
         # 每个A5区域2张图片（上下排列）

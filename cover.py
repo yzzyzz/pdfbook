@@ -7,8 +7,8 @@ from reportlab.pdfbase import pdfmetrics
 import os
 import sys
 
-zhongxianspace = 14
-book_name = "蜡笔小新6"
+zhongxianspace = 11
+book_name = "公司秘书"
 
 # 注册中文字体
 try:
