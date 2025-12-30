@@ -372,6 +372,8 @@ def draw_html_in_a6_region(a6_index,
         if isinstance(element, str):
             pass
         elif element.name == "p":
+            if len(element.text.strip()) <= 2:
+                continue
             text_content = "    " + element.text.strip()
             is_complete = False
             text_cursor = 0
@@ -398,12 +400,12 @@ def draw_html_in_a6_region(a6_index,
                 print(f"图片:{cover_filename}")
             else:
                 cover_filename = element.get("src")
-
+            
+            if a6_index % 8 == 7:
+                front_c.showPage()
+                back_c.showPage()
             if a6_index >= 1 and cursor_y is not None:
                 a6_index += 1
-                if a6_index % 8 == 7:
-                    front_c.showPage()
-                    back_c.showPage()
             cover_filename = "./tmpdir/" + cover_filename
             print(f"图片:{cover_filename}")
             draw_image_in_a6_region(a6_index, cover_filename)
@@ -411,9 +413,6 @@ def draw_html_in_a6_region(a6_index,
                 front_c.showPage()
                 back_c.showPage()
             a6_index += 1
-            if a6_index % 8 == 7:
-                front_c.showPage()
-                back_c.showPage()
             cursor_y = None
             text_cursor = 0
     return a6_index, cursor_x, cursor_y
