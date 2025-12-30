@@ -472,7 +472,6 @@ def draw_html_in_a6_region(a6_index,
             is_complete = False
             text_cursor = 0
             print(f"准备处理处理 标题 {text_content}")
-            exit(1)
             print(f"页面:{a6_index} 绘制位置:{cursor_x}, {cursor_y}")
             while not is_complete:
                 is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
