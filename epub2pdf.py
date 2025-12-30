@@ -63,7 +63,8 @@ A6_WIDTH = PAGE_WIDTH / 2
 A6_HEIGHT = PAGE_HEIGHT / 2
 print("纸张高度:", PAGE_HEIGHT, "纸张宽度:", PAGE_WIDTH)
 # 文本渲染配置
-TEXT_FONT_SIZE = 12
+TEXT_FONT_SIZE = 10
+PAGE_NUMBER_FONT_SIZE = 8
 TEXT_LINE_SPACE = 3
 MARGIN = 10  # 区域内边距
 render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
@@ -141,7 +142,7 @@ def draw_page_number(a6_index):
     tt_x = x_offset + A6_WIDTH - page_center_margin - a6_lr_margin - 10 if a6_index % 2 == 0 else x_offset + a6_lr_margin + page_center_margin
     tt_y = y_offset + 6
     # 设置字体
-    canvas_obj.setFont(DEFAULT_FONT, 10)
+    canvas_obj.setFont(DEFAULT_FONT, PAGE_NUMBER_FONT_SIZE)
     canvas_obj.drawString(
         tt_x,  # 页码位置（A4页面右上角）
         tt_y,  # 页码位置（A4页面顶部20mm）
@@ -489,7 +490,8 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
             html_content=html_content,
             cursor_x=cursor_x,
             cursor_y=cursor_y,
-            font_name=DEFAULT_FONT)
+            font_name=DEFAULT_FONT,
+            font_size=TEXT_FONT_SIZE)
 
     # 保存两个PDF
     if print_page_number:
@@ -500,7 +502,6 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     print(f"✅ 正面PDF生成完成！路径：{os.path.abspath(front_pdf)}")
     print(f"✅ 背面PDF生成完成！路径：{os.path.abspath(back_pdf)}")
     print(f"📄 总共渲染了 {a6_index} 个A6区域")
-
     return front_pdf, back_pdf, a6_index
 
 
@@ -520,12 +521,9 @@ def merge_front_back_pdfs(front_pdf, back_pdf, output_pdf):
     # 获取两个PDF的页数
     front_pages = len(front_reader.pages)
     back_pages = len(back_reader.pages)
-
     # 取较小的页数进行合并
     min_pages = min(front_pages, back_pages)
-
     print(f"开始合并PDF，正面{front_pages}页，背面{back_pages}页")
-
     # 按照一页front，一页back的顺序合并
     for i in range(min_pages):
         # 添加正面页
