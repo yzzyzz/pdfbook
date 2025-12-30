@@ -487,7 +487,7 @@ def draw_html_in_a6_region(a6_index,
         if isinstance(element, str):
             pass
         elif element.name == "p":
-            if len(element.text.strip()) <= 2:
+            if len(element.text.strip()) == 0:
                 continue
             if check_is_title(element.text.strip()):
                 text_content = element.text.strip()
@@ -566,6 +566,66 @@ def draw_html_in_a6_region(a6_index,
 
     return a6_index, cursor_x, cursor_y
 
+
+
+def process_txt_to_pdf(txt_path):
+    """
+    从文本文件生成PDF
+    :param txt_path: 文本文件路径
+    :param pdf_path: 输出PDF文件路径
+    :param font_name: 字体名称
+    :param font_size: 字体大小
+    :param title_size: 标题字体大小
+    :param print_page_number: 是否打印页码
+    """
+    # 读取文本文件内容
+    with open(txt_path, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+    is_complete = False
+    text_cursor = 0
+    a6_index = 0
+    cursor_y = None
+    cursor_x = None
+    # 处理每一行文本
+    for line in lines:
+        if len(line.strip()) == 0:
+            continue
+        if check_is_title(line.strip()):
+            text_content = line.strip()
+        else:
+            text_content = "    " + line.strip()
+        if text_content:
+            is_complete = False
+            text_cursor = 0
+            while not is_complete:
+                if check_is_title(text_content):
+                    is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
+                        a6_index, text_content, text_cursor, cursor_x,
+                        cursor_y, title_size, DEFAULT_FONT, "center")
+                else:
+                    is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
+                        a6_index, text_content, text_cursor, cursor_x,
+                        cursor_y, TEXT_FONT_SIZE, DEFAULT_FONT)
+                if not is_complete:
+                    cursor_x = None
+                    cursor_y = None
+                    if print_page_number:
+                        draw_page_number(a6_index)
+                    if a6_index % 8 == 7:
+                        new_page()
+                    a6_index += 1
+                else:
+                    text_cursor = 0
+                    pass
+                
+    if print_page_number:
+        draw_page_number(a6_index)
+    new_page()
+    front_c.save()
+    back_c.save()
+    print(f"📄 总共渲染了 {a6_index} 个A6区域")
+    return
+    
 
 def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     """
@@ -665,27 +725,34 @@ def main():
         print(f"❌ 输入文件不存在：{epub_path}")
         sys.exit(1)
     # 默认渲染顺序
-    output_dir = "./tmpdir"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    
+    if epub_path.endswith(".epub"):
+        output_dir = "./tmpdir"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    with zipfile.ZipFile(epub_path, 'r') as zip_ref:
-        zip_ref.extractall(output_dir)
-        print(f"解压完成，文件已保存到: {output_dir}")
-
+        with zipfile.ZipFile(epub_path, 'r') as zip_ref:
+            zip_ref.extractall(output_dir)
+            print(f"解压完成，文件已保存到: {output_dir}")
+            
+        _, _, total_a6_regions = generate_custom_order_pdfs(
+        epub_path, front_pdf_file, back_pdf_file)
+    elif epub_path.endswith(".txt"):
+        process_txt_to_pdf(epub_path)
+    else:
+        print(f"❌ 不支持的文件格式：{epub_path}")
+        sys.exit(1)
+        
+    
     # 检查是否提供了合并PDF路径
     merge_pdf_path = "all.pdf"
     if len(sys.argv) >= 3:
         merge_pdf_path = sys.argv[2]
     print(f"渲染顺序：{render_order}")
 
-    _, _, total_a6_regions = generate_custom_order_pdfs(
-        epub_path, front_pdf_file, back_pdf_file)
-
     # 如果提供了合并PDF路径，则合并PDF
     if merge_pdf_path:
         merge_front_back_pdfs(front_pdf_file, back_pdf_file, merge_pdf_path)
-
 
 if __name__ == "__main__":
     main()
