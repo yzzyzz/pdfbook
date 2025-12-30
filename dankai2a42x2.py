@@ -620,7 +620,7 @@ if __name__ == "__main__":
     
     # 执行PDF生成
     try:
-        generate_pdf_from_images(input_folder, output_file, config, print_page_size)
+        generate_pdf_from_images(input_folder, output_file, print_page_size)
     except Exception as e:
         print(f"\n❌ 生成失败：{str(e)}")
         sys.exit(1)
