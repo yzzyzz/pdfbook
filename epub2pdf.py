@@ -13,21 +13,16 @@ from ebooklib import epub
 from bs4 import BeautifulSoup
 
 
-
-
 def check_is_title(str):
     """
     中文检测是否为标题
     """
     if not str or len(str.strip()) == 0:
         return False
-    
     # 去除首尾空白
     text = str.strip()
-    
     # 1. 检查字符串中是否含有空格（可能是标题）
     has_space = ' ' in text or '　' in text  # 包括全角空格
-    
     # 2. 检查是否以"第x章"、"第x节"、"第x卷"等开头
     chapter_patterns = [
         r'^第[一二三四五六七八九十零\d]+[章节卷篇回].*',  # 第x章、第x节、第x卷、第x篇、第x回
@@ -111,7 +106,7 @@ A6_REGIONS_PER_PAGE = 4  # 每页4个A6区域（2x2布局）
 
 # 注册字体
 FONT_NAME = "FangSong"
-FONT_PATH = os.path.dirname(os.path.abspath(__file__)) + "/fs.ttf"
+FONT_PATH = os.path.dirname(os.path.abspath(__file__)) + "/fzss.ttf"
 
 # 检查字体文件是否存在
 if os.path.exists(FONT_PATH):
