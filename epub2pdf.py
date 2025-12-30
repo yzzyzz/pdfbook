@@ -75,6 +75,7 @@ page_lr_margin = 14  # A4页面左右边距
 page_center_margin = 8
 a6_lr_margin = 4
 a6_tb_margin = 2
+print_page_number = True
 
 # A6区域位置定义
 page_positions = [
@@ -91,6 +92,35 @@ page_positions = [
         (A6_WIDTH, 0)  # 物理位置：右下 (索引3)
     ]
 ]
+
+
+def draw_page_number(a6_index):
+    """
+    在指定的PDF画布上绘制页码
+    :param page_index: 页码（从1开始）
+    :param canvas_obj: ReportLab PDF画布对象（front_c 或 back_c）
+    """
+    page_idx, pos_idx = render_order[a6_index % 8]
+
+    # 选择当前应该渲染的画布（正面或背面）
+    if page_idx == 0:  # 正面页
+        canvas_obj = front_c
+        print("  绘制正面页")
+    else:  # 背面页
+        canvas_obj = back_c
+        print("  绘制背面页")
+
+    # 获取当前A6区域的物理位置
+    x_offset, y_offset = page_positions[page_idx][pos_idx]
+
+    tt_x = x_offset + A6_WIDTH - page_center_margin - a6_lr_margin - 10 if a6_index % 2 == 0 else x_offset + a6_lr_margin + page_center_margin
+    tt_y = y_offset + 6
+    # 设置字体
+    canvas_obj.setFont(DEFAULT_FONT, 10)
+    canvas_obj.drawString(
+        tt_x,  # 页码位置（A4页面右上角）
+        tt_y,  # 页码位置（A4页面顶部20mm）
+        f"{a6_index + 1}")
 
 
 def draw_text_in_a6_region_with_cursor(
@@ -386,6 +416,8 @@ def draw_html_in_a6_region(a6_index,
                 if not is_complete:
                     cursor_x = None
                     cursor_y = None
+                    if print_page_number:
+                        draw_page_number(a6_index)
                     if a6_index % 8 == 7:
                         front_c.showPage()
                         back_c.showPage()
@@ -400,18 +432,25 @@ def draw_html_in_a6_region(a6_index,
                 print(f"图片:{cover_filename}")
             else:
                 cover_filename = element.get("src")
-            
+                
+                
+            if a6_index >= 1 and cursor_y is not None: # 处理没绘制完的页面
+                if print_page_number:
+                    draw_page_number(a6_index)
             if a6_index % 8 == 7:
                 front_c.showPage()
                 back_c.showPage()
             if a6_index >= 1 and cursor_y is not None:
                 a6_index += 1
+                
             cover_filename = "./tmpdir/" + cover_filename
             print(f"图片:{cover_filename}")
             draw_image_in_a6_region(a6_index, cover_filename)
             if a6_index % 8 == 7:
                 front_c.showPage()
                 back_c.showPage()
+            if print_page_number:
+                draw_page_number(a6_index)
             a6_index += 1
             cursor_y = None
             text_cursor = 0
