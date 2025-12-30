@@ -71,10 +71,10 @@ render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
 front_c = canvas.Canvas("front.pdf", pagesize=A4)
 back_c = canvas.Canvas("back.pdf", pagesize=A4)
 
-page_lr_margin = 14  # A4页面左右边距
-page_center_margin = 8
-a6_lr_margin = 4
-a6_tb_margin = 2
+page_lr_margin = 16  # A4页面左右边距
+page_center_margin = 18
+a6_lr_margin = 0
+a6_tb_margin = 8
 print_page_number = True
 
 # A6区域位置定义
@@ -174,7 +174,7 @@ def draw_text_in_a6_region_with_cursor(
     # 从指定的光标位置开始绘制
     text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - a6_tb_margin - TEXT_LINE_SPACE
 
-    if a6_index % 2 == 0:
+    if a6_index % 2 == 0: 
         text_x = cursor_x + x_offset if cursor_x is not None else x_offset + page_lr_margin + a6_lr_margin
     else:
         text_x = cursor_x + x_offset if cursor_x is not None else x_offset + page_center_margin + a6_lr_margin
