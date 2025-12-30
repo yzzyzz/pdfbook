@@ -4,6 +4,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
+import zipfile
 import sys
 import re
 
@@ -392,7 +393,7 @@ def draw_html_in_a6_region(a6_index,
             if a6_index % 8 == 7:
                 front_c.showPage()
                 back_c.showPage()
-            cover_filename = "./yt3dir/"+cover_filename
+            cover_filename = "./tmpdir/"+cover_filename
             print(f"图片:{cover_filename}")
             draw_image_in_a6_region(a6_index, cover_filename)
             if a6_index % 8 == 7:
@@ -507,6 +508,14 @@ def main():
         print(f"❌ 输入文件不存在：{epub_path}")
         sys.exit(1)
     # 默认渲染顺序
+    output_dir = "./tmpdir"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    with zipfile.ZipFile(epub_path, 'r') as zip_ref:
+        zip_ref.extractall(output_dir)
+        print(f"解压完成，文件已保存到: {output_dir}")
+        
     # 检查是否提供了合并PDF路径
     merge_pdf_path = "all.pdf"
     if len(sys.argv) >= 3:
