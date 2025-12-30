@@ -13,6 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
 
+
 def is_landscape_image(image_path):
     """
     判断图片是否为横图
@@ -38,7 +39,6 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
         # 创建临时目录
         temp_dir = "temp_split_images"
         os.makedirs(temp_dir, exist_ok=True)
-
         with Image.open(image_path) as img:
             # 确保图片是RGB模式，以便可以保存为PNG
             if img.mode in ('P', 'PA'):
@@ -75,10 +75,6 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
 
 
 # ==================== 配置常量 ====================
-# 原始图片模式
-IMAGE_MODE_LANDSCAPE = "landscape"  # 横版图片
-IMAGE_MODE_PORTRAIT = "portrait"  # 竖版图片
-IMAGE_MODE_AUTO = "auto"  # 自动检测
 fold_mode = 2  # 1、内边缘粘胶 2、外边缘粘胶，内边缘裁剪
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
@@ -90,10 +86,9 @@ if fold_mode == 1:
     A5_SEQ_MAP = [1, 4, 3, 2]
 else:
     A5_SEQ_MAP = [4, 1, 2, 3]
-
-print_page_size = A5
+    
 # 当前配置
-CURRENT_IMAGE_MODE = IMAGE_MODE_PORTRAIT  # 当前图片模式
+print_page_size = A5
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
 lr_padding = 16
@@ -159,13 +154,13 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         if os.path.isfile(file_path) and filename.lower().endswith(
                 valid_image_ext):
             image_files.append(file_path)
-
-    # 按文件名自然排序（保证图片顺序可控）
-    image_files.sort(key=lambda x: os.path.basename(x))
-
+    
     # 检查是否有有效图片
     if not image_files:
         raise RuntimeError(f"错误：文件夹 '{image_folder}' 中未找到任何有效图片！")
+    # 按文件名自然排序（保证图片顺序可控）
+    image_files.sort(key=lambda x: os.path.basename(x))
+
 
     # 重新组织图片：
     # 如果是 A5_IMAGES_1 或者 A5_IMAGES_4 ，如果原始图片里面有横图，则将图片分割为2张竖图
@@ -200,9 +195,6 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     a5_regions_per_a4_sheet = 4  # 每张A4纸有4个A5区域
     images_per_a4_sheet = images_per_a5 * a5_regions_per_a4_sheet
 
-    # 每张A4纸生成的PDF页面数
-    pdf_pages_per_a4_sheet = 2  # 正面和反面
-
     # 计算需要的总PDF页面数
     total_images = len(image_files)
     images_per_pdf_page = CURRENT_A5_IMAGE_COUNT * 2  # 每页PDF包含两个A5区域的图片
@@ -212,7 +204,6 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     total_pdf_pages_needed = need_A4_pages * 2
 
     print(f"配置信息：")
-    print(f"  - 图片模式: {CURRENT_IMAGE_MODE}")
     print(f"  - 每个A5页面图片数: {images_per_a5}")
     print(f"  - 每张A4纸图片数: {images_per_a4_sheet}")
     print(f"  - 每页PDF图片数: {images_per_pdf_page}")
