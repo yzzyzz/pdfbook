@@ -71,6 +71,31 @@ render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
 front_c = canvas.Canvas("front.pdf", pagesize=A4)
 back_c = canvas.Canvas("back.pdf", pagesize=A4)
 
+
+def new_page():
+    """
+    新建一页A4，返回新的游标位置
+    """
+    front_c.showPage()
+    back_c.showPage()
+    #  绘制虚线 将a4分割成2x2 的 a6 区域
+    front_c.setDash(5, 3)
+    front_c.setStrokeColorRGB(0, 0, 0)
+    front_c.setLineWidth(1)
+    front_c.line(PAGE_WIDTH / 2, 0, PAGE_WIDTH / 2, PAGE_HEIGHT)
+    front_c.line(0, PAGE_HEIGHT / 2, PAGE_WIDTH, PAGE_HEIGHT / 2)
+
+    # 重置线条样式为实线
+    front_c.setDash()
+    back_c.setDash(5, 3)
+    back_c.setStrokeColorRGB(0, 0, 0)
+    back_c.setLineWidth(1)
+    back_c.line(PAGE_WIDTH / 2, 0, PAGE_WIDTH / 2, PAGE_HEIGHT)
+    back_c.line(0, PAGE_HEIGHT / 2, PAGE_WIDTH, PAGE_HEIGHT / 2)
+    # 重置线条样式为实线
+    back_c.setDash()
+
+
 page_lr_margin = 16  # A4页面左右边距
 page_center_margin = 18
 a6_lr_margin = 0
@@ -173,7 +198,7 @@ def draw_text_in_a6_region_with_cursor(
     # 从指定的光标位置开始绘制
     text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - a6_tb_margin - TEXT_LINE_SPACE
 
-    if a6_index % 2 == 0: 
+    if a6_index % 2 == 0:
         text_x = cursor_x + x_offset if cursor_x is not None else x_offset + page_lr_margin + a6_lr_margin
     else:
         text_x = cursor_x + x_offset if cursor_x is not None else x_offset + page_center_margin + a6_lr_margin
@@ -240,12 +265,6 @@ def draw_text_in_a6_region_with_cursor(
             canvas_obj.drawString(line_x, text_y - font_size, current_line)
             print(f"绘制行：{current_line}")
 
-            canvas_obj.rect(x_offset,
-                            y_offset,
-                            A6_WIDTH,
-                            A6_HEIGHT,
-                            stroke=1,
-                            fill=0)
         # 更新y坐标
         text_y -= line_height
         # 更新游标
@@ -418,8 +437,7 @@ def draw_html_in_a6_region(a6_index,
                     if print_page_number:
                         draw_page_number(a6_index)
                     if a6_index % 8 == 7:
-                        front_c.showPage()
-                        back_c.showPage()
+                        new_page()
                     a6_index += 1
                 else:
                     text_cursor = 0
@@ -431,13 +449,12 @@ def draw_html_in_a6_region(a6_index,
                 print(f"图片:{cover_filename}")
             else:
                 cover_filename = element.get("src")
-                
-            if a6_index >= 1 and cursor_y is not None: # 处理没绘制完的页面
+
+            if a6_index >= 1 and cursor_y is not None:  # 处理没绘制完的页面
                 if print_page_number:
                     draw_page_number(a6_index)
                 if a6_index % 8 == 7:
-                    front_c.showPage()
-                    back_c.showPage()
+                    new_page()
                 a6_index += 1
             cover_filename = "./tmpdir/" + cover_filename
             print(f"图片:{cover_filename}")
@@ -445,12 +462,12 @@ def draw_html_in_a6_region(a6_index,
             if print_page_number:
                 draw_page_number(a6_index)
             if a6_index % 8 == 7:
-                front_c.showPage()
-                back_c.showPage()
+                new_page()
             a6_index += 1
             cursor_y = None
             text_cursor = 0
     return a6_index, cursor_x, cursor_y
+
 
 def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     """
@@ -477,8 +494,7 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     # 保存两个PDF
     if print_page_number:
         draw_page_number(a6_index)
-    front_c.showPage()
-    back_c.showPage()
+    new_page()
     front_c.save()
     back_c.save()
     print(f"✅ 正面PDF生成完成！路径：{os.path.abspath(front_pdf)}")
