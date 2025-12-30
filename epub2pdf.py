@@ -71,10 +71,9 @@ render_order = [(0, 0), (1, 1), (1, 0), (0, 1), (0, 2), (1, 3), (1, 2), (0, 3)]
 front_c = canvas.Canvas("front.pdf", pagesize=A4)
 back_c = canvas.Canvas("back.pdf", pagesize=A4)
 
-page_lr_margin = 2  # A4页面左右边距
-page_center_margin = 18
-
-a6_lr_margin = 0
+page_lr_margin = 14  # A4页面左右边距
+page_center_margin = 8
+a6_lr_margin = 4
 a6_tb_margin = 2
 
 # A6区域位置定义
@@ -144,12 +143,16 @@ def draw_text_in_a6_region_with_cursor(
     print(f"从位置 {start_cursor} 开始绘制")
     # 从指定的光标位置开始绘制
     text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - a6_tb_margin
-    text_x = cursor_x + x_offset if cursor_x is not None else x_offset + a6_lr_margin
+
+    if a6_index % 2 == 0:
+        text_x = cursor_x + x_offset if cursor_x is not None else x_offset + page_lr_margin + a6_lr_margin
+    else:
+        text_x = cursor_x + x_offset if cursor_x is not None else x_offset + page_center_margin + a6_lr_margin
     print(f"当前绘制位置：{text_x}, {text_y}")
     print(f"当前光标位置：{current_cursor}")
     print("  开始绘制文本:", text)
+    print(f"a6_index: {a6_index}     available_width: {available_width}")
     # 逐行处理文本直到区域用完或文本处理完毕
-
     while current_cursor < len(text):
         # 检查当前行是否还有足够的垂直空间
         if (text_y - line_height) < (y_offset + a6_tb_margin):
@@ -199,14 +202,15 @@ def draw_text_in_a6_region_with_cursor(
 
             # 根据对齐方式计算x坐标
             if align == "center":
-                line_x = x_offset + (A6_WIDTH - text_width) / 2
+                line_x = x_offset + (available_width - text_width) / 2
             elif align == "right":
                 line_x = x_offset + A6_WIDTH - text_width - margin
             else:  # left
-                line_x = x_offset + margin
+                line_x = text_x
 
             canvas_obj.drawString(line_x, text_y - font_size, current_line)
             print(f"绘制行：{current_line}")
+
             canvas_obj.rect(x_offset,
                             y_offset,
                             A6_WIDTH,
@@ -219,10 +223,10 @@ def draw_text_in_a6_region_with_cursor(
         current_cursor = actual_end
         # 检查是否已经处理完整个文本
         if current_cursor >= len(text):
-            return True, 0, 0, text_y - y_offset
-
+            return True, 0, None, text_y - y_offset
     # 如果循环结束但文本未处理完，说明A6区域已满
-    return False, current_cursor, text_x, text_y
+    return False, current_cursor, None, None
+
 
 def draw_image_in_a6_region(a6_index, image_file):
     """
@@ -234,7 +238,7 @@ def draw_image_in_a6_region(a6_index, image_file):
     import os
     from reportlab.lib.utils import ImageReader
     from PIL import Image as PILImage
-    
+
     print(f"处理A6区域 {a6_index}，图片文件: {image_file}")
     page_idx, pos_idx = render_order[a6_index % 8]
 
@@ -251,33 +255,37 @@ def draw_image_in_a6_region(a6_index, image_file):
 
     # 图片边距
     img_margin = MARGIN
-    
+
     # 计算A6区域可用空间
     available_width = A6_WIDTH - 2 * img_margin
     available_height = A6_HEIGHT - 2 * img_margin
-    
+
     # 获取图片路径（相对于EPUB的images目录）
     epub_dir = os.path.dirname(sys.argv[1]) if len(sys.argv) > 1 else "."
-    full_image_path = os.path.join(epub_dir, "images", image_file) if "images/" in image_file else os.path.join(epub_dir, image_file)
-    
+    full_image_path = os.path.join(
+        epub_dir, "images",
+        image_file) if "images/" in image_file else os.path.join(
+            epub_dir, image_file)
+
     # 如果图片文件不存在，尝试从EPUB内容中查找
     if not os.path.exists(full_image_path):
         # 尝试在当前工作目录下查找
         full_image_path = os.path.join(os.getcwd(), image_file)
-        
+
     if not os.path.exists(full_image_path):
         # 如果仍然找不到，跳过绘制
         print(f"  警告：图片文件不存在: {full_image_path}")
         # 绘制一个占位符
         placeholder_text = "[图片: " + image_file + "]"
-        canvas_obj.drawString(x_offset + img_margin, y_offset + A6_HEIGHT/2, placeholder_text)
+        canvas_obj.drawString(x_offset + img_margin, y_offset + A6_HEIGHT / 2,
+                              placeholder_text)
         return
 
     try:
         # 使用PIL获取图片尺寸
         with PILImage.open(full_image_path) as img:
             img_width, img_height = img.size
-        
+
         # 计算缩放比例以适应A6区域
         scale_w = available_width / img_width
         scale_h = available_height / img_height
@@ -290,20 +298,23 @@ def draw_image_in_a6_region(a6_index, image_file):
         centered_y = y_offset + img_margin + (available_height - scaled_h) / 2
         # 绘制图片
         canvas_obj.drawImage(full_image_path,
-                           x=centered_x,
-                           y=centered_y,
-                           width=scaled_w,
-                           height=scaled_h,
-                           preserveAspectRatio=True,
-                           mask='auto')  # auto表示使用图片的透明度信息
-        
-        print(f"  成功绘制图片: {image_file} (原始尺寸: {img_width}x{img_height}, 绘制尺寸: {scaled_w}x{scaled_h})")
-        
+                             x=centered_x,
+                             y=centered_y,
+                             width=scaled_w,
+                             height=scaled_h,
+                             preserveAspectRatio=True,
+                             mask='auto')  # auto表示使用图片的透明度信息
+
+        print(
+            f"  成功绘制图片: {image_file} (原始尺寸: {img_width}x{img_height}, 绘制尺寸: {scaled_w}x{scaled_h})"
+        )
+
     except Exception as e:
         print(f"  错误：无法绘制图片 {image_file}: {str(e)}")
         # 绘制一个占位符
         placeholder_text = "[图片: " + image_file + " - 加载失败]"
-        canvas_obj.drawString(x_offset + img_margin, y_offset + A6_HEIGHT/2, placeholder_text)
+        canvas_obj.drawString(x_offset + img_margin, y_offset + A6_HEIGHT / 2,
+                              placeholder_text)
 
 
 def draw_html_in_a6_region(a6_index,
@@ -387,19 +398,22 @@ def draw_html_in_a6_region(a6_index,
                 print(f"图片:{cover_filename}")
             else:
                 cover_filename = element.get("src")
-            
+
             if a6_index >= 1 and cursor_y is not None:
                 a6_index += 1
-            if a6_index % 8 == 7:
-                front_c.showPage()
-                back_c.showPage()
-            cover_filename = "./tmpdir/"+cover_filename
+                if a6_index % 8 == 7:
+                    front_c.showPage()
+                    back_c.showPage()
+            cover_filename = "./tmpdir/" + cover_filename
             print(f"图片:{cover_filename}")
             draw_image_in_a6_region(a6_index, cover_filename)
             if a6_index % 8 == 7:
                 front_c.showPage()
                 back_c.showPage()
             a6_index += 1
+            if a6_index % 8 == 7:
+                front_c.showPage()
+                back_c.showPage()
             cursor_y = None
             text_cursor = 0
     return a6_index, cursor_x, cursor_y
@@ -428,13 +442,10 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
             font_name=DEFAULT_FONT)
 
     # 保存两个PDF
-
     front_c.showPage()
     back_c.showPage()
-
     front_c.save()
     back_c.save()
-
     print(f"✅ 正面PDF生成完成！路径：{os.path.abspath(front_pdf)}")
     print(f"✅ 背面PDF生成完成！路径：{os.path.abspath(back_pdf)}")
     print(f"📄 总共渲染了 {a6_index} 个A6区域")
@@ -515,7 +526,7 @@ def main():
     with zipfile.ZipFile(epub_path, 'r') as zip_ref:
         zip_ref.extractall(output_dir)
         print(f"解压完成，文件已保存到: {output_dir}")
-        
+
     # 检查是否提供了合并PDF路径
     merge_pdf_path = "all.pdf"
     if len(sys.argv) >= 3:
@@ -528,6 +539,7 @@ def main():
     # 如果提供了合并PDF路径，则合并PDF
     if merge_pdf_path:
         merge_front_back_pdfs(front_pdf_file, back_pdf_file, merge_pdf_path)
+
 
 if __name__ == "__main__":
     main()
