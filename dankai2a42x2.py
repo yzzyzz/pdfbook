@@ -22,7 +22,7 @@ def load_config(config_file):
     :return: 配置对象
     """
     config = configparser.ConfigParser()
-    
+
     # 设置默认值
     config['page'] = {
         'print_page_size': 'A5',
@@ -36,7 +36,7 @@ def load_config(config_file):
         'print_page_index': 'true',
         'fold_mode': '2'
     }
-    
+
     # 读取配置文件
     if os.path.exists(config_file):
         config.read(config_file, encoding='utf-8')
@@ -46,28 +46,34 @@ def load_config(config_file):
         with open(config_file, 'w', encoding='utf-8') as f:
             config.write(f)
         print(f"已创建默认配置文件: {config_file}")
-    
+
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
     global print_page_index, fold_mode, A5_SEQ_MAP
-    
+
     # 读取配置参数
     page_size_name = config.get('page', 'print_page_size', fallback='A5')
     if page_size_name == 'A5':
         print_page_size = A5
     else:
         print_page_size = A4  # 默认为A4
-        
-    CURRENT_A5_IMAGE_COUNT = config.getint('page', 'current_a5_image_count', fallback=1)
+
+    CURRENT_A5_IMAGE_COUNT = config.getint('page',
+                                           'current_a5_image_count',
+                                           fallback=1)
     LINE_WIDTH = config.getint('page', 'line_width', fallback=1)
     lr_padding = config.getint('page', 'lr_padding', fallback=16)
     center_padding = config.getint('page', 'center_padding', fallback=16)
     PRE_NONE = config.getint('page', 'pre_none', fallback=0)
-    start_index_offset = config.getint('page', 'start_index_offset', fallback=-5)
-    print_page_index = config.getboolean('page', 'print_page_index', fallback=True)
+    start_index_offset = config.getint('page',
+                                       'start_index_offset',
+                                       fallback=-5)
+    print_page_index = config.getboolean('page',
+                                         'print_page_index',
+                                         fallback=True)
     fold_mode = config.getint('page', 'fold_mode', fallback=2)
-    
+
     # 根据fold_mode设置A5_SEQ_MAP
     if fold_mode == 1:
         A5_SEQ_MAP = [1, 4, 3, 2]
@@ -80,7 +86,7 @@ def load_config(config_file):
     print(f"  - 边距: 左右={lr_padding}, 中心={center_padding}")
     print(f"  - 打印页码: {print_page_index}")
     print(f"  - 页码偏移: {print_page_index}")
-    
+
     return config
 
 
@@ -156,7 +162,7 @@ if fold_mode == 1:
     A5_SEQ_MAP = [1, 4, 3, 2]
 else:
     A5_SEQ_MAP = [4, 1, 2, 3]
-    
+
 # 当前配置
 print_page_size = A5
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
@@ -166,6 +172,8 @@ center_padding = 16
 PRE_NONE = 0
 start_index_offset = -5
 print_page_index = True
+
+
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
     """
@@ -185,7 +193,7 @@ def draw_center_divider_line(canvas_obj, page_width, page_height):
     canvas_obj.setLineWidth(clip_line_width)
 
     # 计算中心线的X坐标（在两个A5区域之间）
-    center_x = page_width / 2 - clip_line_width // 2 
+    center_x = page_width / 2 - clip_line_width // 2
     # 绘制垂直虚线
     canvas_obj.line(center_x, 0, center_x, page_height)
 
@@ -224,13 +232,12 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         if os.path.isfile(file_path) and filename.lower().endswith(
                 valid_image_ext):
             image_files.append(file_path)
-    
+
     # 检查是否有有效图片
     if not image_files:
         raise RuntimeError(f"错误：文件夹 '{image_folder}' 中未找到任何有效图片！")
     # 按文件名自然排序（保证图片顺序可控）
     image_files.sort(key=lambda x: os.path.basename(x))
-
 
     # 重新组织图片：
     # 如果是 A5_IMAGES_1 或者 A5_IMAGES_4 ，如果原始图片里面有横图，则将图片分割为2张竖图
@@ -318,15 +325,15 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
         # 根据配置绘制图片
         draw_images_in_a5_region(
-                canvas_obj=c,
-                image_files=image_files,
-                a5_index=a5lindex,  # 正面A5区域索引
-                x_offset=front_a5_x,
-                y_offset=front_a5_y,
-                a5_width=a5_width,
-                a5_height=a5_height,
-                pdf_page_index=pdf_page_index,
-                images_per_pdf_page=images_per_pdf_page)
+            canvas_obj=c,
+            image_files=image_files,
+            a5_index=a5lindex,  # 正面A5区域索引
+            x_offset=front_a5_x,
+            y_offset=front_a5_y,
+            a5_width=a5_width,
+            a5_height=a5_height,
+            pdf_page_index=pdf_page_index,
+            images_per_pdf_page=images_per_pdf_page)
 
         draw_images_in_a5_region(
             canvas_obj=c,
@@ -390,14 +397,16 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
 
             scaled_w = img_w * scale
             scaled_h = img_h * scale
-            
+
             if a5_index % 2 == 1:
                 # 背面A5区域，图片向右偏移
-                x = x_offset +  (a5_width - lr_padding - center_padding - scaled_w) / 2 + center_padding
+                x = x_offset + (a5_width - lr_padding - center_padding -
+                                scaled_w) / 2 + center_padding
             else:
                 # 正面A5区域，图片向左偏移
-                x = x_offset +  (a5_width - lr_padding - center_padding - scaled_w) / 2 + lr_padding
-            
+                x = x_offset + (a5_width - lr_padding - center_padding -
+                                scaled_w) / 2 + lr_padding
+
             y = y_offset + (a5_height - scaled_h) / 2
 
             canvas_obj.drawImage(img_path,
@@ -416,20 +425,19 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 # 设置字体颜色为黑色
                 canvas_obj.setFillColorRGB(0, 0, 0)
 
-                page_number_text = str(page_number - PRE_NONE + start_index_offset)
-                text_width = canvas_obj.stringWidth(page_number_text, "Helvetica",
-                                                    6)
+                page_number_text = str(page_number - PRE_NONE +
+                                       start_index_offset)
+                text_width = canvas_obj.stringWidth(page_number_text,
+                                                    "Helvetica", 6)
 
                 if fold_mode == 1:
                     if a5_index % 2 == 1:
                         page_x = x_offset + 12
-                    # 页码放在A5区域的右下角
                     else:
                         page_x = x_offset + a5_width - text_width - 12
                 else:
                     if a5_index % 2 == 1:
                         page_x = x_offset + 4 + center_padding
-                    # 页码放在A5区域的右下角
                     else:
                         page_x = x_offset + a5_width - text_width - 4 - center_padding
                 page_y = y_offset + 3
@@ -519,7 +527,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         # 每个小图片区域的尺寸（2x2网格）
         small_width = (a5_width - lr_padding - center_padding) / 2
         small_height = (a5_height) / 2
-        
+
         if a5_index % 2 == 1:
             positions = [
                 (small_width + center_padding, small_height),  # 右上
@@ -534,10 +542,11 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 (small_width + lr_padding, 0),  # 右下
                 (lr_padding, 0),  # 左下
             ]
-            
+
         # 绘制4张图片
-        for i, (img_path, pos, page_num) in enumerate(
-                zip(img_paths, positions, page_numbers)):
+        for i, (img_path, pos,
+                page_num) in enumerate(zip(img_paths, positions,
+                                           page_numbers)):
             if img_path and os.path.exists(img_path):
                 with Image.open(img_path) as img:
                     img_w, img_h = img.size
@@ -546,10 +555,8 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 scale_w = small_width / img_w
                 scale_h = small_height / img_h
                 scale = min(scale_w, scale_h)
-
                 scaled_w = img_w * scale
                 scaled_h = img_h * scale
-
                 # 在小区域内居中
                 x = x_offset + pos[0] + (small_width - scaled_w) / 2
                 y = y_offset + pos[1] + (small_height - scaled_h) / 2
@@ -567,17 +574,16 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                     canvas_obj.setFont("Helvetica", 8)
                     # 设置字体颜色为黑色
                     canvas_obj.setFillColorRGB(0, 0, 0)
-
                     page_number_text = str(page_num)
-                    text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 8)
-
+                    text_width = canvas_obj.stringWidth(
+                        page_number_text, "Helvetica", 8)
                     # 页码放在每个小图片的右下角
-                    
                     if a5_index % 2 == 1:
                         page_x = x_offset + pos[0] + 5
                     else:
-                        page_x = x_offset + pos[0] + small_width - text_width - 5
-                        
+                        page_x = x_offset + pos[
+                            0] + small_width - text_width - 5
+
                     page_y = y_offset + pos[1] + 3
 
                     canvas_obj.drawString(page_x, page_y, page_number_text)
@@ -588,36 +594,40 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             canvas_obj.setStrokeColorRGB(0, 0, 0)
             # 设置线条宽度
             canvas_obj.setLineWidth(LINE_WIDTH)
-            
+
             # 绘制垂直分割线
             if a5_index % 2 == 1:
-                v_line_x = x_offset + center_padding + small_width - LINE_WIDTH/2
+                v_line_x = x_offset + center_padding + small_width - LINE_WIDTH / 2
             else:
-                v_line_x = x_offset + lr_padding + small_width - LINE_WIDTH/2
+                v_line_x = x_offset + lr_padding + small_width - LINE_WIDTH / 2
             canvas_obj.line(v_line_x, y_offset, v_line_x, y_offset + a5_height)
             # 绘制水平分割线
-            h_line_y = y_offset + small_height + LINE_WIDTH/2
+            h_line_y = y_offset + small_height + LINE_WIDTH / 2
             canvas_obj.line(x_offset, h_line_y, x_offset + a5_width, h_line_y)
-        
+
 
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
     # 检查命令行参数数量
     if len(sys.argv) != 4:
         print("❌ 参数错误！正确用法：")
-        print(f"python {os.path.basename(__file__)} <图片文件夹路径> <输出PDF文件路径> <配置文件路径>")
+        print(
+            f"python {os.path.basename(__file__)} <图片文件夹路径> <输出PDF文件路径> <配置文件路径>"
+        )
         print("示例：")
-        print(f"python {os.path.basename(__file__)} ./images ./output.pdf config.ini")
+        print(
+            f"python {os.path.basename(__file__)} ./images ./output.pdf config.ini"
+        )
         sys.exit(1)
 
     # 获取命令行参数
     input_folder = sys.argv[1]
     output_file = sys.argv[2]
     config_file = sys.argv[3]
-    
+
     # 加载配置
     config = load_config(config_file)
-    
+
     # 执行PDF生成
     try:
         generate_pdf_from_images(input_folder, output_file, print_page_size)
