@@ -442,11 +442,11 @@ def draw_html_in_a6_region(a6_index,
             cover_filename = "./tmpdir/" + cover_filename
             print(f"图片:{cover_filename}")
             draw_image_in_a6_region(a6_index, cover_filename)
+            if print_page_number:
+                draw_page_number(a6_index)
             if a6_index % 8 == 7:
                 front_c.showPage()
                 back_c.showPage()
-            if print_page_number:
-                draw_page_number(a6_index)
             a6_index += 1
             cursor_y = None
             text_cursor = 0
