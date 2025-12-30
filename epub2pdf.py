@@ -456,7 +456,6 @@ def draw_html_in_a6_region(a6_index,
             text_cursor = 0
     return a6_index, cursor_x, cursor_y
 
-
 def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
     """
     从EPUB文件生成两个PDF（正面和背面），按照自定义顺序交替渲染内容
@@ -480,6 +479,8 @@ def generate_custom_order_pdfs(epub_path, front_pdf, back_pdf):
             font_name=DEFAULT_FONT)
 
     # 保存两个PDF
+    if print_page_number:
+        draw_page_number(a6_index)
     front_c.showPage()
     back_c.showPage()
     front_c.save()
