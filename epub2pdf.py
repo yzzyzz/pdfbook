@@ -142,7 +142,7 @@ def draw_text_in_a6_region_with_cursor(
     current_cursor = start_cursor
     print(f"从位置 {start_cursor} 开始绘制")
     # 从指定的光标位置开始绘制
-    text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - a6_tb_margin
+    text_y = cursor_y + y_offset if cursor_y is not None else y_offset + A6_HEIGHT - a6_tb_margin - TEXT_LINE_SPACE
 
     if a6_index % 2 == 0:
         text_x = cursor_x + x_offset if cursor_x is not None else x_offset + page_lr_margin + a6_lr_margin
