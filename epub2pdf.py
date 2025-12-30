@@ -166,8 +166,8 @@ def new_page():
 
 page_lr_margin = 16  # A4页面左右边距
 page_center_margin = 18
-a6_lr_margin = 0
-a6_tb_margin = 10
+a6_lr_margin = 10
+a6_tb_margin = 22
 print_page_number = True
 
 # A6区域位置定义
@@ -207,7 +207,7 @@ def draw_page_number(a6_index):
     x_offset, y_offset = page_positions[page_idx][pos_idx]
 
     tt_x = x_offset + A6_WIDTH - page_center_margin - a6_lr_margin - 10 if a6_index % 2 == 0 else x_offset + a6_lr_margin + page_center_margin
-    tt_y = y_offset + 8
+    tt_y = y_offset + 18
     # 设置字体
     canvas_obj.setFont(DEFAULT_FONT, PAGE_NUMBER_FONT_SIZE)
     canvas_obj.drawString(
