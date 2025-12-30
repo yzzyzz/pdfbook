@@ -401,7 +401,6 @@ def draw_html_in_a6_region(a6_index,
             a6_index += 1
             cursor_y = None
             text_cursor = 0
-
     return a6_index, cursor_x, cursor_y
 
 
@@ -507,11 +506,9 @@ def main():
     if not os.path.exists(epub_path):
         print(f"❌ 输入文件不存在：{epub_path}")
         sys.exit(1)
-
     # 默认渲染顺序
-
     # 检查是否提供了合并PDF路径
-    merge_pdf_path = None
+    merge_pdf_path = "all.pdf"
     if len(sys.argv) >= 3:
         merge_pdf_path = sys.argv[2]
     print(f"渲染顺序：{render_order}")
@@ -522,7 +519,6 @@ def main():
     # 如果提供了合并PDF路径，则合并PDF
     if merge_pdf_path:
         merge_front_back_pdfs(front_pdf_file, back_pdf_file, merge_pdf_path)
-
 
 if __name__ == "__main__":
     main()
