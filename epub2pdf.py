@@ -281,15 +281,12 @@ def draw_image_in_a6_region(a6_index, image_file):
         scale_w = available_width / img_width
         scale_h = available_height / img_height
         scale = min(scale_w, scale_h)  # 保持宽高比
-        
         # 计算缩放后的尺寸
         scaled_w = img_width * scale
         scaled_h = img_height * scale
-        
         # 计算居中位置
         centered_x = x_offset + img_margin + (available_width - scaled_w) / 2
         centered_y = y_offset + img_margin + (available_height - scaled_h) / 2
-        
         # 绘制图片
         canvas_obj.drawImage(full_image_path,
                            x=centered_x,
@@ -389,7 +386,9 @@ def draw_html_in_a6_region(a6_index,
                 print(f"图片:{cover_filename}")
             else:
                 cover_filename = element.get("src")
-            a6_index += 1
+            
+            if a6_index >= 1 and cursor_y is not None:
+                a6_index += 1
             if a6_index % 8 == 7:
                 front_c.showPage()
                 back_c.showPage()
@@ -400,6 +399,7 @@ def draw_html_in_a6_region(a6_index,
                 front_c.showPage()
                 back_c.showPage()
             a6_index += 1
+            cursor_y = None
             text_cursor = 0
 
     return a6_index, cursor_x, cursor_y
