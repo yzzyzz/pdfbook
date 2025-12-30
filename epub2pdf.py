@@ -13,6 +13,70 @@ from ebooklib import epub
 from bs4 import BeautifulSoup
 
 
+
+
+def check_is_title(str):
+    """
+    中文检测是否为标题
+    """
+    if not str or len(str.strip()) == 0:
+        return False
+    
+    # 去除首尾空白
+    text = str.strip()
+    
+    # 1. 检查字符串中是否含有空格（可能是标题）
+    has_space = ' ' in text or '　' in text  # 包括全角空格
+    
+    # 2. 检查是否以"第x章"、"第x节"、"第x卷"等开头
+    chapter_patterns = [
+        r'^第[一二三四五六七八九十零\d]+[章节卷篇回].*',  # 第x章、第x节、第x卷、第x篇、第x回
+        r'^[章节卷篇回][一二三四五六七八九十零\d]+.*',   # 章x、节x、卷x、篇x、回x
+    ]
+    
+    # 3. 检查是否以"卷x"等开头
+    volume_patterns = [
+        r'^卷[一二三四五六七八九十零\d].*',      # 卷x
+        r'^第[一二三四五六七八九十零\d]+部.*',   # 第x部
+        r'^[上下]卷.*',                         # 上卷、下卷
+        r'^[前后]篇.*',                         # 前篇、后篇
+    ]
+    
+    import re
+    
+    # 检查章节模式
+    for pattern in chapter_patterns:
+        if re.match(pattern, text):
+            return True
+    
+    # 检查卷数模式
+    for pattern in volume_patterns:
+        if re.match(pattern, text):
+            return True
+    
+    # 如果包含空格且长度适中（不太长也不太短），可能是标题
+    if has_space and 3 <= len(text) <= 50:
+        return True
+    
+    # 检查是否全是标点符号
+    import string
+    # 中文标点符号
+    chinese_punctuation = '，。！？；：""''（）【】《》〈〉「」『』〈〉〔〕…—–'
+    all_punctuation = set(string.punctuation + chinese_punctuation)
+    
+    if all(c in all_punctuation or c.isspace() for c in text):
+        return False  # 全是标点符号不是标题
+    
+    # 如果文本较短（如少于10个字符）且看起来像标题（如只有一行），可能是标题
+    if len(text) <= 15 and '\n' not in text and '\r' not in text:
+        # 检查是否包含一些标题关键词
+        title_keywords = ['序', '引言', '前言', '后记', '目录', '简介', '概要', '总结', '结论']
+        if any(keyword in text for keyword in title_keywords):
+            return True
+    
+    return False
+
+
 def epub_html_iter(epub_path):
     """
     按文档顺序返回 HTML 迭代器
@@ -64,6 +128,8 @@ A6_HEIGHT = PAGE_HEIGHT / 2
 print("纸张高度:", PAGE_HEIGHT, "纸张宽度:", PAGE_WIDTH)
 # 文本渲染配置
 TEXT_FONT_SIZE = 10
+title_size = TEXT_FONT_SIZE + 3
+
 PAGE_NUMBER_FONT_SIZE = 8
 TEXT_LINE_SPACE = 3
 MARGIN = 10  # 区域内边距
@@ -423,15 +489,24 @@ def draw_html_in_a6_region(a6_index,
         elif element.name == "p":
             if len(element.text.strip()) <= 2:
                 continue
-            text_content = "    " + element.text.strip()
+            if check_is_title(element.text.strip()):
+                text_content = element.text.strip()
+            else:
+                text_content = "    " + element.text.strip()
             is_complete = False
             text_cursor = 0
             print(f"准备处理处理 text_content {text_content}")
             print(f"页面:{a6_index} 绘制位置:{cursor_x}, {cursor_y}")
             while not is_complete:
-                is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
-                    a6_index, text_content, text_cursor, cursor_x, cursor_y,
-                    font_size, font_name)
+                if check_is_title(text_content):
+                    is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
+                        a6_index, text_content, text_cursor, cursor_x,
+                        cursor_y, title_size, font_name, "center")
+                else:
+                    is_complete, text_cursor, cursor_x, cursor_y = draw_text_in_a6_region_with_cursor(
+                        a6_index, text_content, text_cursor, cursor_x,
+                        cursor_y, font_size, font_name)
+
                 if not is_complete:
                     cursor_x = None
                     cursor_y = None
