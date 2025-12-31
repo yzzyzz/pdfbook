@@ -57,8 +57,8 @@ def check_is_title(str):
             return True
     
     # 如果包含空格且长度适中（不太长也不太短），可能是标题
-    if has_space and 3 <= len(text) <= 50:
-        return True
+    # if has_space and 3 <= len(text) <= 50:
+    #     return True
     
     # 检查是否全是标点符号
     import string
@@ -169,6 +169,7 @@ page_center_margin = 18
 a6_lr_margin = 10
 a6_tb_margin = 22
 print_page_number = True
+skip_cover = True
 
 # A6区域位置定义
 page_positions = [
@@ -523,13 +524,16 @@ def draw_html_in_a6_region(a6_index,
                     text_cursor = 0
                     pass
         elif element.name == "img" or element.name == "image":
+            # global skip_cover
+            # if skip_cover:
+            #     skip_cover = False
+            #     continue
             cover_filename = ""
             if element.has_attr("xlink:href"):
                 cover_filename = element["xlink:href"]
                 print(f"图片:{cover_filename}")
             else:
                 cover_filename = element.get("src")
-
             if a6_index >= 1 and cursor_y is not None:  # 处理没绘制完的页面
                 if print_page_number:
                     draw_page_number(a6_index)
