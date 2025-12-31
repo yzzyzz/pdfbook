@@ -32,7 +32,7 @@ def load_config(config_file):
         'lr_padding': '16',
         'center_padding': '16',
         'pre_none': '0',
-        'start_index_offset': '-5',
+        'start_index_offset': '0',
         'print_page_index': 'true',
         'fold_mode': '2'
     }
@@ -68,7 +68,7 @@ def load_config(config_file):
     PRE_NONE = config.getint('page', 'pre_none', fallback=0)
     start_index_offset = config.getint('page',
                                        'start_index_offset',
-                                       fallback=-5)
+                                       fallback=0)
     print_page_index = config.getboolean('page',
                                          'print_page_index',
                                          fallback=True)
@@ -170,8 +170,9 @@ LINE_WIDTH = 1
 lr_padding = 16
 center_padding = 16
 PRE_NONE = 0
-start_index_offset = -5
+start_index_offset = 0
 print_page_index = True
+need_A4_pages = 0
 
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
@@ -275,7 +276,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # 计算需要的总PDF页面数
     total_images = len(image_files)
     images_per_pdf_page = CURRENT_A5_IMAGE_COUNT * 2  # 每页PDF包含两个A5区域的图片
-
+    global need_A4_pages
     need_A4_pages = (total_images + CURRENT_A5_IMAGE_COUNT * 4 -
                      1) // (CURRENT_A5_IMAGE_COUNT * 4)
     total_pdf_pages_needed = need_A4_pages * 2
@@ -311,7 +312,6 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             first_page = False
 
         total_sheet_count += 1
-
         draw_center_divider_line(c, page_width, page_height)
 
         # 确定当前页面的A5区域位置
@@ -378,18 +378,26 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
     :param pdf_page_index: 当前PDF页面索引
     :param images_per_pdf_page: 每页PDF包含的图片数量
     """
+    global need_A4_pages
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
         # 每个A5区域1张图片
-        img_index = a5_index - 1
+        if pdf_page_index % 2 == 0:  # 正面
+            if a5_index % 2 == 1:  # 右边
+                img_index = int(pdf_page_index)
+            else:
+                img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+        else:  # 反面
+            if a5_index % 2 == 1:  # 右边
+                img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+            else:
+                img_index = int(pdf_page_index)
         img_path = image_files[img_index] if img_index < len(
             image_files) else None
-        page_number = a5_index if img_path else None
-
+        page_number = img_index + 1
         if img_path and os.path.exists(img_path):
             with Image.open(img_path) as img:
                 img_w, img_h = img.size
-
             # 计算缩放比例（填满A5区域）
             scale_w = (a5_width - lr_padding - center_padding) / img_w
             scale_h = a5_height / img_h
