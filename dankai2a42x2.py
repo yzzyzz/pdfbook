@@ -306,10 +306,10 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     for pdf_page_index in range(total_pdf_pages_needed):
         # 检查当前PDF页面是否有内容
         # 新页面（第一页无需showPage，后续页面需要）
-        if not first_page:
-            c.showPage()
-        else:
-            first_page = False
+        # if not first_page:
+        #     c.showPage()
+        # else:
+        #     first_page = False
 
         total_sheet_count += 1
         draw_center_divider_line(c, page_width, page_height)
@@ -348,8 +348,10 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         print(
             f"进度：第 {total_sheet_count} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
         )
+        c.showPage()
 
     # --------------- 第六步：保存PDF文件 ---------------
+    c.showPage()
     c.save()
     print(f"\n✅ PDF生成完成！")
     print(f"📁 输出路径：{os.path.abspath(output_pdf)}")

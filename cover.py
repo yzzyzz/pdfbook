@@ -97,6 +97,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
             print(f"提示：已自动创建输出目录 '{output_dir}'")
+        
     else:
         raise ValueError(f"错误：输入路径 '{input_path}' 既不是文件夹也不是文件！")
 
@@ -133,7 +134,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
                         img = img.rotate(270, expand=True)
                     elif orientation == 8:
                         img = img.rotate(90, expand=True)
-
+                        
             img_w, img_h = img.size
 
         # 计算缩放比例，保持宽高比
