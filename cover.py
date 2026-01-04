@@ -7,8 +7,8 @@ from reportlab.pdfbase import pdfmetrics
 import os
 import sys
 
-zhongxianspace = 12
-book_name = "金庸 雪山飞狐"
+zhongxianspace = 11
+book_name = "高跟助理"
 
 # 注册中文字体
 try:
@@ -20,7 +20,7 @@ try:
     font_registered = False
     common_fonts = [
         # "AlibabaPuHuiTi-3-55-RegularL3.ttf",  # macOS
-        "fs.ttf",  # macOS
+        "FZXSS-Lusitana-Hybrid.ttf",  # macOS
     ]
 
     for font_path in common_fonts:
@@ -147,7 +147,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         c.drawImage(
             image_file,
             x=current_x,
-            y=0,  # 从当前y位置向下绘制
+            y= (a6_height - scaled_h)/2,  # 从当前y位置向下绘制
             width=scaled_w,
             height=scaled_h,
             preserveAspectRatio=True,
@@ -160,7 +160,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         # 更新下一个图片的x坐标
         space_points = zhongxianspace * 72 / 25.4
         if text_x == 0:
-            text_x = a6_width
+            text_x = a6_width +5
         current_x += (a6_width + space_points)  # 加10点间距
 
     # 保存PDF文件

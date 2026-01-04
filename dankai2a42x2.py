@@ -384,14 +384,14 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         # 每个A5区域1张图片
         if pdf_page_index % 2 == 0:  # 正面
             if a5_index % 2 == 1:  # 右边
-                img_index = int(pdf_page_index)
-            else:
                 img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+            else:
+                img_index = int(pdf_page_index) 
         else:  # 反面
             if a5_index % 2 == 1:  # 右边
-                img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+                img_index = int(pdf_page_index) 
             else:
-                img_index = int(pdf_page_index)
+                img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
         img_path = image_files[img_index] if img_index < len(
             image_files) else None
         page_number = img_index + 1
