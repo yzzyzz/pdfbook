@@ -266,7 +266,6 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 
     # 前面补None，方便后续处理
     image_files = [None] * PRE_NONE + image_files
-
     # --------------- 第三步：计算分组大小 ---------------
     # 根据配置计算每张A4纸包含的图片数量
     images_per_a5 = CURRENT_A5_IMAGE_COUNT
@@ -299,24 +298,12 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     a5_height = page_height
 
     # --------------- 第五步：处理每页PDF并添加到PDF ---------------
-    total_sheet_count = 0
-    first_page = True
-
     # 迭代PDF页面而不是图片
     for pdf_page_index in range(total_pdf_pages_needed):
-        # 检查当前PDF页面是否有内容
-        # 新页面（第一页无需showPage，后续页面需要）
-        # if not first_page:
-        #     c.showPage()
-        # else:
-        #     first_page = False
-
-        total_sheet_count += 1
         draw_center_divider_line(c, page_width, page_height)
 
         # 确定当前页面的A5区域位置
         page_side = pdf_page_index % 2  # 0=正面, 1=反面
-        sheet_index = pdf_page_index // 2  # 当前A4纸的索引
 
         front_a5_x, front_a5_y = 0, 0
         back_a5_x, back_a5_y = a5_width, 0
@@ -332,8 +319,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             y_offset=front_a5_y,
             a5_width=a5_width,
             a5_height=a5_height,
-            pdf_page_index=pdf_page_index,
-            images_per_pdf_page=images_per_pdf_page)
+            pdf_page_index=pdf_page_index)
 
         draw_images_in_a5_region(
             canvas_obj=c,
@@ -343,10 +329,9 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             y_offset=back_a5_y,
             a5_width=a5_width,
             a5_height=a5_height,
-            pdf_page_index=pdf_page_index,
-            images_per_pdf_page=images_per_pdf_page)
+            pdf_page_index=pdf_page_index)
         print(
-            f"进度：第 {total_sheet_count} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
+            f"进度：第 {pdf_page_index+1} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
         )
         c.showPage()
 
@@ -355,7 +340,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     c.save()
     print(f"\n✅ PDF生成完成！")
     print(f"📁 输出路径：{os.path.abspath(output_pdf)}")
-    print(f"📄 PDF页数：{total_sheet_count}")
+    print(f"📄 PDF页数：{total_pdf_pages_needed}")
     print(f"📘 打印说明：")
     print(f"   1. 横向打印A4纸张")
     print(f"   2. 每页PDF包含{images_per_pdf_page}张图片")
@@ -366,8 +351,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 
 
 def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
-                             y_offset, a5_width, a5_height, pdf_page_index,
-                             images_per_pdf_page):
+                             y_offset, a5_width, a5_height, pdf_page_index):
     """
     在指定的A5区域内绘制图片，根据配置自动选择绘制方式
     :param canvas_obj: PDF画布对象
@@ -434,7 +418,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                 canvas_obj.setFont("Helvetica", 6)
                 # 设置字体颜色为黑色
                 canvas_obj.setFillColorRGB(0, 0, 0)
-
                 page_number_text = str(page_number - PRE_NONE +
                                        start_index_offset)
                 text_width = canvas_obj.stringWidth(page_number_text,
