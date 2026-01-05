@@ -17,6 +17,7 @@ import util
 
 fold_mode = 2  # 1 左翻页，2 右翻页
 
+
 def load_config(config_file):
     """
     从配置文件加载配置
@@ -34,8 +35,7 @@ def load_config(config_file):
         'center_padding': '16',
         'pre_none': '0',
         'start_index_offset': '0',
-        'print_page_index': 'true',
-        'color_mode': '0'
+        'print_page_index': 'true'
     }
 
     # 读取配置文件
@@ -47,7 +47,7 @@ def load_config(config_file):
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
-    global print_page_index, fold_mode, A5_SEQ_MAP, color_mode
+    global print_page_index, fold_mode, A5_SEQ_MAP
 
     # 读取配置参数
     page_size_name = config.get('page', 'print_page_size', fallback='A5')
@@ -55,7 +55,7 @@ def load_config(config_file):
         print_page_size = A5
     else:
         print_page_size = A4  # 默认为A4
-
+        
     CURRENT_A5_IMAGE_COUNT = config.getint('page',
                                            'current_a5_image_count',
                                            fallback=1)
@@ -70,7 +70,7 @@ def load_config(config_file):
                                          'print_page_index',
                                          fallback=True)
     fold_mode = config.getint('page', 'fold_mode', fallback=2)
-    color_mode = config.getint('page', 'color_mode', fallback=0)
+    
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
@@ -355,6 +355,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
     :param images_per_pdf_page: 每页PDF包含的图片数量
     """
     global need_A4_pages
+
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
         if color_mode == 0:  # 灰度模式
@@ -601,7 +602,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
 # --------------- 命令行调用入口 ---------------
 if __name__ == "__main__":
     # 检查命令行参数数量
-    if len(sys.argv) != 4:
+    if len(sys.argv) < 4:
         print("❌ 参数错误！正确用法：")
         print(
             f"python {os.path.basename(__file__)} <图片文件夹路径> <输出PDF文件路径> <配置文件路径>"
@@ -616,10 +617,12 @@ if __name__ == "__main__":
     input_folder = sys.argv[1]
     output_file = sys.argv[2]
     config_file = sys.argv[3]
-
     # 加载配置
     config = load_config(config_file)
-
+    if len(sys.argv) == 5:
+        color_mode = int(sys.argv[4])
+    else:
+        color_mode = 0
     # 执行PDF生成
     try:
         generate_pdf_from_images(input_folder, output_file, print_page_size)
