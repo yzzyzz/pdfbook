@@ -300,8 +300,6 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         draw_center_divider_line(c, page_width, page_height)
 
         # 确定当前页面的A5区域位置
-        page_side = pdf_page_index % 2  # 0=正面, 1=反面
-
         front_a5_x, front_a5_y = 0, 0
         back_a5_x, back_a5_y = a5_width, 0
 
@@ -364,19 +362,31 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
     :param images_per_pdf_page: 每页PDF包含的图片数量
     """
     global need_A4_pages
+    
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
-        # 每个A5区域1张图片
-        if pdf_page_index % 2 == 0:  # 正面
-            if left_or_right == 1:  # 右边
-                img_index = int(pdf_page_index)
-            else:
-                img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
-        else:  # 反面
-            if left_or_right == 1:  # 右边
-                img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
-            else:
-                img_index = int(pdf_page_index)
+        if color_mode == 0: # 灰度模式
+            if pdf_page_index % 2 == 0:  # 正面
+                if left_or_right == 1:  # 右边
+                    img_index = int(pdf_page_index)
+                else:
+                    img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+            else:  # 反面
+                if left_or_right == 1:  # 右边
+                    img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+                else:
+                    img_index = int(pdf_page_index)
+        else: # 彩色模式
+            if pdf_page_index % 2 == 0:  # 正面
+                if left_or_right == 1:  # 右边
+                    img_index = pdf_page_index//2
+                else:
+                    img_index = pdf_page_index//2 + 3
+            else:  # 反面
+                if left_or_right == 1:  # 右边
+                    img_index = pdf_page_index//2 + 2
+                else:
+                    img_index = pdf_page_index//2 + 1
         img_path = image_files[img_index] if img_index < len(
             image_files) else None
         page_number = img_index + 1
