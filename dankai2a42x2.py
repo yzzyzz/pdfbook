@@ -362,10 +362,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
     :param images_per_pdf_page: 每页PDF包含的图片数量
     """
     global need_A4_pages
-    
+
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
-        if color_mode == 0: # 灰度模式
+        if color_mode == 0:  # 灰度模式
             if pdf_page_index % 2 == 0:  # 正面
                 if left_or_right == 1:  # 右边
                     img_index = int(pdf_page_index)
@@ -376,17 +376,17 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                     img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
                 else:
                     img_index = int(pdf_page_index)
-        else: # 彩色模式
+        else:  # 彩色模式
             if pdf_page_index % 2 == 0:  # 正面
                 if left_or_right == 1:  # 右边
-                    img_index = pdf_page_index//2
+                    img_index = (pdf_page_index // 2) * 4
                 else:
-                    img_index = pdf_page_index//2 + 3
+                    img_index = (pdf_page_index // 2) * 4 + 3
             else:  # 反面
                 if left_or_right == 1:  # 右边
-                    img_index = pdf_page_index//2 + 2
+                    img_index = (pdf_page_index // 2) * 4 + 2
                 else:
-                    img_index = pdf_page_index//2 + 1
+                    img_index = (pdf_page_index // 2) * 4 + 1
         img_path = image_files[img_index] if img_index < len(
             image_files) else None
         page_number = img_index + 1
