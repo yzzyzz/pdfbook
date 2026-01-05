@@ -15,6 +15,7 @@ from reportlab.lib.pagesizes import landscape
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
 
+fold_mode = 2  # 1 左翻页，2 右翻页
 
 def load_config(config_file):
     """
@@ -134,14 +135,16 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
             right_img = img.crop(right_box)
             right_path = os.path.join(temp_dir, f"{base_name}_right_temp.png")
             right_img.save(right_path, 'PNG')
-            return right_path, left_path
+            if fold_mode == 1:
+                return left_path, right_path
+            else:
+                return right_path, left_path
     except Exception as e:
         print(f"分割图片时出错 {image_path}: {e}")
         return None, None
 
 
 # ==================== 配置常量 ====================
-fold_mode = 2  # 1 左翻页，2 右翻页
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
 A5_IMAGES_2 = 2  # 每个A5页面2张图片（上下排列）
