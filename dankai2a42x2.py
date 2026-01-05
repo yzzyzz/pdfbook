@@ -41,11 +41,8 @@ def load_config(config_file):
     if os.path.exists(config_file):
         config.read(config_file, encoding='utf-8')
     else:
-        print(f"配置文件 {config_file} 不存在，使用默认配置")
-        # 创建默认配置文件
-        with open(config_file, 'w', encoding='utf-8') as f:
-            config.write(f)
-        print(f"已创建默认配置文件: {config_file}")
+        raise FileNotFoundError(f"配置文件 {config_file} 不存在")
+
 
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
