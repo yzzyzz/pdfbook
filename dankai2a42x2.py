@@ -623,7 +623,6 @@ if __name__ == "__main__":
         color_mode = int(sys.argv[4])
     else:
         color_mode = 0
-    # 执行PDF生成
     try:
         generate_pdf_from_images(input_folder, output_file, print_page_size)
     except Exception as e:
