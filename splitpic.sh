@@ -47,7 +47,7 @@ function splitpic() {
                 # 判断是横图还是竖图（宽度大于高度为横图）
                 if [ "$width" -le "$height" ]; then
                     echo "检测到竖图，仅复制: $filename"
-                    cp "$img_file" "${dst_dir}/${filename}."
+                    cp "$img_file" "${dst_dir}/${filename}"
                 else
                     # 横图进行分割处理
                     echo "检测到横图，进行分割处理: $filename"
