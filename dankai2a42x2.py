@@ -43,7 +43,6 @@ def load_config(config_file):
     else:
         raise FileNotFoundError(f"配置文件 {config_file} 不存在")
 
-
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
@@ -72,15 +71,12 @@ def load_config(config_file):
     fold_mode = config.getint('page', 'fold_mode', fallback=2)
     color_mode = config.getint('page', 'color_mode', fallback=0)
 
-    # 根据fold_mode设置A5_SEQ_MAP
-    # A5_SEQ_MAP = [4, 1, 2, 3]
-
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
     print(f"  - 每个A5页面图片数: {CURRENT_A5_IMAGE_COUNT}")
     print(f"  - 边距: 左右={lr_padding}, 中心={center_padding}")
     print(f"  - 打印页码: {print_page_index}")
-    print(f"  - 页码偏移: {print_page_index}")
+    print(f"  - 页码偏移: {start_index_offset}")
     return config
 
 
@@ -159,6 +155,7 @@ else:
 
 # 当前配置
 print_page_size = A5
+pagenumber_font_size = 6
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
 lr_padding = 16
@@ -254,7 +251,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             else:
                 # 竖图直接添加
                 new_image_files.append(img_path)
-        
+
         # 更新image_files列表
         image_files = new_image_files
 
@@ -299,11 +296,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         # 确定当前页面的A5区域位置
         front_a5_x, front_a5_y = 0, 0
         back_a5_x, back_a5_y = a5_width, 0
-
         left_a5, right_a5 = 0, 1
-
-        # a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
-        # a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
         # 根据配置绘制图片
         draw_images_in_a5_region(
             canvas_obj=c,
@@ -359,7 +352,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
     :param images_per_pdf_page: 每页PDF包含的图片数量
     """
     global need_A4_pages
-
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
         if color_mode == 0:  # 灰度模式
@@ -394,7 +386,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
             scale_w = (a5_width - lr_padding - center_padding) / img_w
             scale_h = a5_height / img_h
             scale = min(scale_w, scale_h)
-
             scaled_w = img_w * scale
             scaled_h = img_h * scale
 
@@ -416,31 +407,30 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                                  height=scaled_h,
                                  preserveAspectRatio=True)
 
-        # 添加页码（如果提供了页码）
-        if page_number is not None and print_page_index:
-            # 设置字体和大小
-            show_number = page_number - PRE_NONE + start_index_offset
-            if show_number > 0:
-                canvas_obj.setFont("Helvetica", 6)
-                # 设置字体颜色为黑色
-                canvas_obj.setFillColorRGB(0, 0, 0)
-                page_number_text = str(page_number - PRE_NONE +
-                                       start_index_offset)
-                text_width = canvas_obj.stringWidth(page_number_text,
-                                                    "Helvetica", 6)
-
-                if fold_mode == 1:
-                    if left_or_right == 1:
-                        page_x = x_offset + 12
+            # 添加页码（如果提供了页码）
+            if page_number is not None and print_page_index:
+                # 设置字体和大小
+                show_number = page_number - PRE_NONE + start_index_offset
+                if show_number > 0:
+                    canvas_obj.setFont("Helvetica", pagenumber_font_size)
+                    # 设置字体颜色为黑色
+                    canvas_obj.setFillColorRGB(0, 0, 0)
+                    page_number_text = str(page_number - PRE_NONE +
+                                           start_index_offset)
+                    text_width = canvas_obj.stringWidth(
+                        page_number_text, "Helvetica", pagenumber_font_size)
+                    if fold_mode == 1:
+                        if left_or_right == 1:
+                            page_x = x_offset + 12
+                        else:
+                            page_x = x_offset + a5_width - text_width - 12
                     else:
-                        page_x = x_offset + a5_width - text_width - 12
-                else:
-                    if left_or_right == 1:
-                        page_x = x_offset + 4 + center_padding
-                    else:
-                        page_x = x_offset + a5_width - text_width - 4 - center_padding
-                page_y = y_offset + 8
-                canvas_obj.drawString(page_x, page_y, page_number_text)
+                        if left_or_right == 1:
+                            page_x = x_offset + 4 + center_padding
+                        else:
+                            page_x = x_offset + a5_width - text_width - 4 - center_padding
+                    page_y = y_offset + 8
+                    canvas_obj.drawString(page_x, page_y, page_number_text)
 
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
         # 每个A5区域2张图片（上下排列）
