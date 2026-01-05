@@ -55,7 +55,7 @@ def load_config(config_file):
         print_page_size = A5
     else:
         print_page_size = A4  # 默认为A4
-        
+
     CURRENT_A5_IMAGE_COUNT = config.getint('page',
                                            'current_a5_image_count',
                                            fallback=1)
@@ -70,7 +70,6 @@ def load_config(config_file):
                                          'print_page_index',
                                          fallback=True)
     fold_mode = config.getint('page', 'fold_mode', fallback=2)
-    
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
