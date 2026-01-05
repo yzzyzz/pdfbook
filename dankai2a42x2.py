@@ -265,15 +265,14 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # --------------- 第三步：计算分组大小 ---------------
     # 根据配置计算每张A4纸包含的图片数量
     images_per_a5 = CURRENT_A5_IMAGE_COUNT
-    a5_regions_per_a4_sheet = 4  # 每张A4纸有4个A5区域
-    images_per_a4_sheet = images_per_a5 * a5_regions_per_a4_sheet
+    images_per_a4_sheet = images_per_a5 * 4
 
     # 计算需要的总PDF页面数
     total_images = len(image_files)
     images_per_pdf_page = CURRENT_A5_IMAGE_COUNT * 2  # 每页PDF包含两个A5区域的图片
     global need_A4_pages
-    need_A4_pages = (total_images + CURRENT_A5_IMAGE_COUNT * 4 -
-                     1) // (CURRENT_A5_IMAGE_COUNT * 4)
+    need_A4_pages = (total_images + images_per_a4_sheet -
+                     1) // (images_per_a4_sheet)
     total_pdf_pages_needed = need_A4_pages * 2
 
     print(f"配置信息：")
