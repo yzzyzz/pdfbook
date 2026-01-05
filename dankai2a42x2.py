@@ -50,7 +50,7 @@ def load_config(config_file):
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
-    global print_page_index, fold_mode, A5_SEQ_MAP
+    global print_page_index, fold_mode, A5_SEQ_MAP, color_mode
 
     # 读取配置参数
     page_size_name = config.get('page', 'print_page_size', fallback='A5')
@@ -73,10 +73,10 @@ def load_config(config_file):
                                          'print_page_index',
                                          fallback=True)
     fold_mode = config.getint('page', 'fold_mode', fallback=2)
+    color_mode = config.getint('page', 'color_mode', fallback=0)
 
     # 根据fold_mode设置A5_SEQ_MAP
-
-    A5_SEQ_MAP = [4, 1, 2, 3]
+    # A5_SEQ_MAP = [4, 1, 2, 3]
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
@@ -170,6 +170,7 @@ PRE_NONE = 0
 start_index_offset = 0
 print_page_index = True
 need_A4_pages = 0
+color_mode = 0  # 0 灰度模式，1 彩色模式
 
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
