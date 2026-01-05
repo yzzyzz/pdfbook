@@ -86,7 +86,6 @@ def load_config(config_file):
     print(f"  - 边距: 左右={lr_padding}, 中心={center_padding}")
     print(f"  - 打印页码: {print_page_index}")
     print(f"  - 页码偏移: {print_page_index}")
-
     return config
 
 
@@ -308,13 +307,15 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         front_a5_x, front_a5_y = 0, 0
         back_a5_x, back_a5_y = a5_width, 0
 
-        a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
-        a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
+        left_a5, right_a5 = 0, 1
+
+        # a5lindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2]
+        # a5rindex = (pdf_page_index // 2) * 4 + A5_SEQ_MAP[page_side * 2 + 1]
         # 根据配置绘制图片
         draw_images_in_a5_region(
             canvas_obj=c,
             image_files=image_files,
-            a5_index=a5lindex,  # 正面A5区域索引
+            left_or_right=left_a5,  # 正面A5区域索引
             x_offset=front_a5_x,
             y_offset=front_a5_y,
             a5_width=a5_width,
@@ -324,7 +325,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
         draw_images_in_a5_region(
             canvas_obj=c,
             image_files=image_files,
-            a5_index=a5rindex,  # 背面A5区域索引
+            left_or_right=right_a5,  # 背面A5区域索引
             x_offset=back_a5_x,
             y_offset=back_a5_y,
             a5_width=a5_width,
@@ -350,13 +351,13 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 # ==================== 绘图函数 ====================
 
 
-def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
+def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                              y_offset, a5_width, a5_height, pdf_page_index):
     """
     在指定的A5区域内绘制图片，根据配置自动选择绘制方式
     :param canvas_obj: PDF画布对象
     :param image_files: 所有图片文件列表
-    :param a5_index: A5区域索引（0-3）
+    :param left_or_right: 0=左边A5区域, 1=右边A5区域
     :param x_offset: X偏移量
     :param y_offset: Y偏移量
     :param a5_width: A5区域宽度
@@ -369,12 +370,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
         # 每个A5区域1张图片
         if pdf_page_index % 2 == 0:  # 正面
-            if a5_index % 2 == 1:  # 右边
+            if left_or_right == 1:  # 右边
                 img_index = int(pdf_page_index)
             else:
                 img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
         else:  # 反面
-            if a5_index % 2 == 1:  # 右边
+            if left_or_right == 1:  # 右边
                 img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
             else:
                 img_index = int(pdf_page_index)
@@ -392,7 +393,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             scaled_w = img_w * scale
             scaled_h = img_h * scale
 
-            if a5_index % 2 == 1:
+            if left_or_right == 1:
                 # 背面A5区域，图片向右偏移
                 x = x_offset + (a5_width - lr_padding - center_padding -
                                 scaled_w) / 2 + center_padding
@@ -424,12 +425,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                                                     "Helvetica", 6)
 
                 if fold_mode == 1:
-                    if a5_index % 2 == 1:
+                    if left_or_right == 1:
                         page_x = x_offset + 12
                     else:
                         page_x = x_offset + a5_width - text_width - 12
                 else:
-                    if a5_index % 2 == 1:
+                    if left_or_right == 1:
                         page_x = x_offset + 4 + center_padding
                     else:
                         page_x = x_offset + a5_width - text_width - 4 - center_padding
@@ -442,7 +443,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         page_numbers = []
 
         # 计算当前A5区域对应的图片索引
-        base_index = (a5_index - 1) * 2
+        base_index = (pdf_page_index) * 2
         for i in range(2):
             img_index = base_index + i
             img_path = image_files[img_index] if img_index < len(
@@ -508,7 +509,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         page_numbers = []
 
         # 计算当前A5区域对应的图片索引
-        base_index = (a5_index - 1) * 4
+        base_index = (pdf_page_index - 1) * 4
         for i in range(4):
             img_index = base_index + i
             img_path = image_files[img_index] if img_index < len(
@@ -521,7 +522,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
         small_width = (a5_width - lr_padding - center_padding) / 2
         small_height = (a5_height) / 2
 
-        if a5_index % 2 == 1:
+        if left_or_right == 1:
             positions = [
                 (small_width + center_padding, small_height),  # 右上
                 (center_padding, small_height),
@@ -571,7 +572,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
                     text_width = canvas_obj.stringWidth(
                         page_number_text, "Helvetica", 8)
                     # 页码放在每个小图片的右下角
-                    if a5_index % 2 == 1:
+                    if left_or_right == 1:
                         page_x = x_offset + pos[0] + 5
                     else:
                         page_x = x_offset + pos[
@@ -589,7 +590,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, a5_index, x_offset,
             canvas_obj.setLineWidth(LINE_WIDTH)
 
             # 绘制垂直分割线
-            if a5_index % 2 == 1:
+            if left_or_right == 1:
                 v_line_x = x_offset + center_padding + small_width - LINE_WIDTH / 2
             else:
                 v_line_x = x_offset + lr_padding + small_width - LINE_WIDTH / 2
