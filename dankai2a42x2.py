@@ -239,25 +239,26 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # 如果是 A5_IMAGES_1 或者 A5_IMAGES_4 ，如果原始图片里面有横图，则将图片分割为2张竖图
     if CURRENT_A5_IMAGE_COUNT in [A5_IMAGES_1, A5_IMAGES_4]:
         print("检查并处理横图...")
-        i = 0
-        while i < len(image_files):
-            img_path = image_files[i]
+        new_image_files = []
+        for img_path in image_files:
             if is_landscape_image(img_path):
                 # 如果是横图，分割为两张竖图
                 left_path, right_path = split_landscape_to_portrait(img_path)
                 if left_path and right_path:
-                    # 用分割后的两张图片替换原图
-                    image_files[i:i + 1] = [left_path, right_path]
-                    i += 2  # 跳过新增的两张图片
+                    # 添加分割后的两张图片
+                    new_image_files.extend([left_path, right_path])
                     print(f"已将横图 {os.path.basename(img_path)} 分割为两张竖图")
                 else:
                     # 如果分割失败，保留原图
-                    i += 1
+                    new_image_files.append(img_path)
             else:
-                # 竖图直接跳过
-                i += 1
+                # 竖图直接添加
+                new_image_files.append(img_path)
+        
+        # 更新image_files列表
+        image_files = new_image_files
 
-    print(f"提示：共找到 {len(image_files)} 张有效图片")
+    print(f"提示：共找到 {len(image_files)} 张有效图片（包含分割后的图片）")
 
     # 前面补None，方便后续处理
     image_files = [None] * PRE_NONE + image_files
