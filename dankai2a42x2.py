@@ -10,6 +10,7 @@ import os
 import sys
 from PIL import Image, ImageDraw, ImageFont
 import configparser
+from reportlab.lib.pagesizes import landscape
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
@@ -26,7 +27,6 @@ def load_config(config_file):
     # 设置默认值
     config['page'] = {
         'print_page_size': 'A5',
-        'current_image_mode': 'portrait',
         'current_a5_image_count': '1',
         'line_width': '1',
         'lr_padding': '16',
@@ -34,7 +34,7 @@ def load_config(config_file):
         'pre_none': '0',
         'start_index_offset': '0',
         'print_page_index': 'true',
-        'fold_mode': '2'
+        'color_mode': '0'
     }
 
     # 读取配置文件
@@ -75,10 +75,8 @@ def load_config(config_file):
     fold_mode = config.getint('page', 'fold_mode', fallback=2)
 
     # 根据fold_mode设置A5_SEQ_MAP
-    if fold_mode == 1:
-        A5_SEQ_MAP = [1, 4, 3, 2]
-    else:
-        A5_SEQ_MAP = [4, 1, 2, 3]
+
+    A5_SEQ_MAP = [4, 1, 2, 3]
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
@@ -150,7 +148,7 @@ def split_landscape_to_portrait(image_path, output_prefix="split"):
 
 
 # ==================== 配置常量 ====================
-fold_mode = 2  # 1、内边缘粘胶 2、外边缘粘胶，内边缘裁剪
+fold_mode = 2  # 1 左翻页，2 右翻页
 # A5页面包含的图片数量
 A5_IMAGES_1 = 1  # 每个A5页面1张图片
 A5_IMAGES_2 = 2  # 每个A5页面2张图片（上下排列）
@@ -287,7 +285,6 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     print(f"  - 需要PDF页数: {total_pdf_pages_needed}")
 
     # --------------- 第四步：初始化PDF画布（横向A4） ---------------
-    from reportlab.lib.pagesizes import landscape
     landscape_pagesize = landscape(pagesize)  # 横向A4: 297mm x 210mm
     c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
     page_width, page_height = landscape_pagesize  # 获取页面尺寸（单位：点，1点=1/72英寸）
