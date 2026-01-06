@@ -429,10 +429,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                             page_x = x_offset + a5_width - text_width - 12
                     else:
                         if left_or_right == 1:
-                            page_x = x_offset + 4 + center_padding
+                            page_x = x_offset + 3 + center_padding
                         else:
-                            page_x = x_offset + a5_width - text_width - 4 - center_padding
-                    page_y = y_offset + 8
+                            page_x = x_offset + a5_width - text_width - 3 - center_padding
+                    page_y = y_offset + 4
                     canvas_obj.drawString(page_x, page_y, page_number_text)
 
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
