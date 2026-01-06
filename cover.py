@@ -8,11 +8,27 @@ from reportlab.lib.pagesizes import landscape
 
 import os
 import sys
+import re
 
-zhongxianspace = 21
+zhongxianspace = 22
 
-book_name = "老夫子年代大全集5"
-
+book_name = "金田一29獄門墊殺人事件"
+def split_text_for_vertical_display(text):
+    """
+    将文本拆分为垂直显示的元素，但保持数字作为一个整体
+    """
+    import re
+    # 使用正则表达式将数字组合和非数字字符分开
+    parts = re.split(r'(\d+)', text)
+    result = []
+    for part in parts:
+        if part.isdigit():
+            # 如果是数字，作为一个整体添加
+            result.append(part)
+        else:
+            # 如果不是数字，按字符拆分
+            result.extend(list(part))
+    return result
 # 注册中文字体
 try:
     # 尝试使用系统字体
@@ -67,7 +83,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
             # 初始化PDF画布
     c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
     # 设置页面边距
-    margin = 0  # 页面边距
+    margin = 80  # 页面边距
     current_x = margin  # 当前绘制的x坐标
     current_y = page_height - margin  # 当前绘制的y坐标（从页面顶部开始）
 
@@ -152,21 +168,20 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
 
         # 绘制文字：
         # 绘制垂直方向的文字
-        text_chars = list(book_name)
+        text_elements = split_text_for_vertical_display(book_name)
         font_size = int(zhongxianspace * 1.4)
         char_height = font_size + 2  # 字体大小 + 行间距
         c.setFont(DEFAULT_FONT, font_size)
-        # 计算起始y坐标，使文字垂直居中
-        start_y =  (scaled_h / 2) + (len(text_chars) * char_height /
-                                                2)
-        # 绘制每个字符
-        print(text_chars)
-        for j, char in enumerate(text_chars):
-            char_y = start_y - j * char_height
-            # 将文字居中于text_x位置
-            centered_x = text_x
-            c.drawString(centered_x, char_y, char)
+        # 计算起始y坐标，考虑数字组合可能占用更多垂直空间
+        start_y = (scaled_h / 2) + (len(text_elements) * char_height / 2) - 14
 
+        # 绘制每个元素（数字组合或单个字符）
+        print(text_elements)
+        for j, element in enumerate(text_elements):
+            char_y = start_y - j * char_height
+            centered_x = text_x
+            c.drawString(centered_x, char_y, element)
+            
         c.save()
         print(f"\n✅ PDF生成完成！")
         print(f"📁 输出路径：{os.path.abspath(output_pdf)}")
