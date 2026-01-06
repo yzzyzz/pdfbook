@@ -9,7 +9,7 @@ OUTPUT_DIR="test_images"
 mkdir -p "$OUTPUT_DIR"
 
 # 循环生成1-120号图片，文件名格式为0001.jpg、0002.jpg…0120.jpg
-for ((num=1; num<=120; num++)); do
+for ((num=1; num<=160; num++)); do
     # 核心：用printf格式化数字为4位，不足补零
     FILE_NAME="${OUTPUT_DIR}/$(printf "%04d" $num).jpg"
     
