@@ -506,8 +506,17 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         img_paths = []
         page_numbers = []
 
+        if pdf_page_index % 2 == 0:  # 正面
+            if left_or_right == 0:  # 左边
+                base_index = ((pdf_page_index // 2) * 4 + 3) * 4
+            else:  # 右边
+                base_index = ((pdf_page_index // 2) * 4) * 4
+        else:
+            if left_or_right == 0:  # 左边
+                base_index = ((pdf_page_index // 2) * 4 + 1) * 4
+            else:  # 右边
+                base_index = ((pdf_page_index // 2) * 4 + 2) * 4
         # 计算当前A5区域对应的图片索引
-        base_index = (pdf_page_index - 1) * 4
         for i in range(4):
             img_index = base_index + i
             img_path = image_files[img_index] if img_index < len(
