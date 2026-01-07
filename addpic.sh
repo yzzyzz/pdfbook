@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 检查参数数量
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     echo "用法: $0 <src目录> <dst目录>"
     echo "示例: $0 /path/to/src /path/to/dst"
     exit 1
@@ -10,6 +10,7 @@ fi
 # 获取参数
 src_dir="$1"
 dst_dir="$2"
+counter=$3
 
 # 检查源目录是否存在
 if [ ! -d "$src_dir" ]; then
@@ -54,7 +55,6 @@ readarray -t src_images < <(printf '%s\n' "${src_images[@]}" | sort)
 echo "源目录 '$src_dir' 中找到 ${#src_images[@]} 个图片文件"
 
 # 开始移动和重命名图片
-counter=$((dst_count + 20))
 for src_image in "${src_images[@]}"; do
     # 获取源文件扩展名
     extension="${src_image##*.}"
