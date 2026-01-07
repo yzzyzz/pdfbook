@@ -20,9 +20,11 @@ for ((num=1; num<=160; num++)); do
     
     # 生成图片 - 背景随机色，字体为白色
     convert -size "${A5_WIDTH}x${A5_HEIGHT}" \
-            -fill black \
+            -fill white \
+            -background "rgb($R,$G,$B)" \
             -gravity center \
             -pointsize 100 \
+            -colorspace sRGB \
             label:"$num" \
             "$FILE_NAME"
     

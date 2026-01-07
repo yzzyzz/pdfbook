@@ -394,12 +394,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
 
             if left_or_right == 1:
                 # 背面A5区域，图片向右偏移
-                x = x_offset + (a5_width - lr_padding - center_padding -
-                                scaled_w) / 2 + center_padding
+                x = x_offset + (a5_width - lr_padding - scaled_w)
             else:
                 # 正面A5区域，图片向左偏移
-                x = x_offset + (a5_width - lr_padding - center_padding -
-                                scaled_w) / 2 + lr_padding
+                x = x_offset + lr_padding
 
             y = y_offset + (a5_height - scaled_h) / 2
 
@@ -424,14 +422,14 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                         page_number_text, "Helvetica", pagenumber_font_size)
                     if fold_mode == 1:
                         if left_or_right == 1:
-                            page_x = x_offset + 12
+                            page_x = x_offset + center_padding + 4
                         else:
-                            page_x = x_offset + a5_width - text_width - 12
+                            page_x = x_offset + a5_width - text_width - center_padding - 4
                     else:
                         if left_or_right == 1:
-                            page_x = x_offset + 3 + center_padding
+                            page_x = x_offset + 4 + center_padding
                         else:
-                            page_x = x_offset + a5_width - text_width - 3 - center_padding
+                            page_x = x_offset + a5_width - text_width - 4 - center_padding
                     page_y = y_offset + 4
                     canvas_obj.drawString(page_x, page_y, page_number_text)
 
@@ -528,7 +526,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                     base_index = ((pdf_page_index // 2) * 4 + 1) * 4
                 else:  # 右边
                     base_index = ((pdf_page_index // 2) * 4 + 2) * 4
-            
 
         # 计算当前A5区域对应的图片索引
         for i in range(4):
