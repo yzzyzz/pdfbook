@@ -569,11 +569,9 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                 scale = min(scale_w, scale_h)
                 scaled_w = img_w * scale
                 scaled_h = img_h * scale
-                print(small_height, scaled_h)
                 if small_height - scaled_h < 10:
                     scaled_h = small_height - 12
-                    exit()
-                    
+                    # exit()
                 # 在小区域内居中
                 x = x_offset + pos[0] + (small_width - scaled_w) / 2
                 y = y_offset + pos[1] + (small_height - scaled_h) / 2
