@@ -1,6 +1,6 @@
-#  单开图转a4 打印 booklet 模式 (4合一漫画)
+#  双开图片 打印  (4合一漫画)
 #  输入：图片文件夹路径
-#  输出：生成的PDF文件（ booklet 模式）
+# 
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, A5
@@ -16,7 +16,6 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import util
 
 fold_mode = 2  # 1 左翻页，2 右翻页
-
 
 def load_config(config_file):
     """

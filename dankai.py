@@ -171,7 +171,7 @@ start_index_offset = 0
 print_page_index = True
 need_A4_pages = 0
 color_mode = 0  # 0 灰度模式，1 彩色模式
-
+image_margin = 6
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
@@ -386,14 +386,26 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
     print(page_numbers)
     # 每个小图片区域的尺寸（2x2网格）
     small_width = (a5_width - lr_padding - center_padding) / 2
-    small_height = (a5_height) / 2
+    small_height = (a5_height) / 2 - image_margin * 2
 
-    positions = [
-        (a5_width - lr_padding - small_width, small_height),  # 右上
-        (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, small_height),
-        (a5_width - lr_padding - small_width, 0),  # 右下
-        (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, 0),  # 左下
-    ]
+    if pdf_page_index % 2 == 0:  # 正面
+        positions = [
+            (a5_width - lr_padding - small_width,
+             a5_height / 2 + image_margin),  # 右上
+            (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
+             a5_height / 2 + image_margin),  # 左上
+            (a5_width - lr_padding - small_width, image_margin),  # 右下
+            (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
+             image_margin),  # 左下
+        ]
+    else:  # 背面
+        positions = [
+            (lr_padding + small_width + LINE_WIDTH,
+             a5_height / 2 + image_margin),  # 右上
+            (lr_padding, a5_height / 2 + image_margin),  # 左上
+            (lr_padding + small_width + LINE_WIDTH, image_margin),  # 右下
+            (lr_padding, image_margin),  # 左下
+        ]
 
     # 绘制4张图片
     for i, (img_path, pos,
@@ -408,9 +420,8 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
             scale = min(scale_w, scale_h)
             scaled_w = img_w * scale
             scaled_h = img_h * scale
-            if small_height - scaled_h < 10:
-                scaled_h = small_height - 12
             # 在小区域内居中
+            
             x = x_offset + pos[0] + (small_width - scaled_w) / 2
             y = y_offset + pos[1] + (small_height - scaled_h) / 2
             canvas_obj.drawImage(img_path,
@@ -692,9 +703,8 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                 scaled_w = img_w * scale
                 scaled_h = img_h * scale
 
-                if small_height - scaled_h < 10:
-                    scaled_h = small_height - 12
-                    # exit()
+                if small_height - scaled_h < image_margin:
+                    scaled_h = small_height - image_margin - 2
                 # 在小区域内居中
                 x = x_offset + pos[0] + (small_width - scaled_w) / 2
                 y = y_offset + pos[1] + (small_height - scaled_h) / 2
