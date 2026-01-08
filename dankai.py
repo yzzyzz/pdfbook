@@ -59,7 +59,7 @@ def load_config(config_file):
     CURRENT_A5_IMAGE_COUNT = config.getint('page',
                                            'current_a5_image_count',
                                            fallback=1)
-    LINE_WIDTH = config.getint('page', 'line_width', fallback=1)
+    LINE_WIDTH = config.getfloat('page', 'line_width', fallback=1.0)
     lr_padding = config.getint('page', 'lr_padding', fallback=16)
     center_padding = config.getint('page', 'center_padding', fallback=16)
     PRE_NONE = config.getint('page', 'pre_none', fallback=0)
@@ -171,7 +171,7 @@ start_index_offset = 0
 print_page_index = True
 need_A4_pages = 0
 color_mode = 0  # 0 灰度模式，1 彩色模式
-image_margin = 6
+image_margin = 3
 
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
@@ -462,7 +462,7 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
             v_line_x = x_offset + a5_width - lr_padding - small_width - LINE_WIDTH / 2
         else:
             v_line_x = x_offset + lr_padding + small_width + LINE_WIDTH / 2
-        canvas_obj.line(v_line_x, 10, v_line_x, a5_height - 10)
+        canvas_obj.line(v_line_x, 8, v_line_x, a5_height - 8)
         # 绘制水平分割线
         h_line_y = a5_height / 2
         canvas_obj.line(v_line_x - small_width, h_line_y,
@@ -705,8 +705,8 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                 scaled_w = img_w * scale
                 scaled_h = img_h * scale
 
-                if small_height - scaled_h < image_margin:
-                    scaled_h = small_height - image_margin - 2
+                # if small_height - scaled_h < image_margin:
+                #     scaled_h = small_height - image_margin - 2
                 # 在小区域内居中
                 x = x_offset + pos[0] + (small_width - scaled_w) / 2
                 y = y_offset + pos[1] + (small_height - scaled_h) / 2
