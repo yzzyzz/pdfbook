@@ -173,6 +173,7 @@ need_A4_pages = 0
 color_mode = 0  # 0 灰度模式，1 彩色模式
 image_margin = 6
 
+
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
 def draw_center_divider_line(canvas_obj, page_width, page_height):
     """
@@ -421,7 +422,7 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
             scaled_w = img_w * scale
             scaled_h = img_h * scale
             # 在小区域内居中
-            
+
             x = x_offset + pos[0] + (small_width - scaled_w) / 2
             y = y_offset + pos[1] + (small_height - scaled_h) / 2
             canvas_obj.drawImage(img_path,
@@ -464,7 +465,8 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
         canvas_obj.line(v_line_x, 10, v_line_x, a5_height - 10)
         # 绘制水平分割线
         h_line_y = a5_height / 2
-        canvas_obj.line(lr_padding, h_line_y, a5_width - lr_padding, h_line_y)
+        canvas_obj.line(v_line_x - small_width, h_line_y,
+                        v_line_x + small_width, h_line_y)
 
 
 # ==================== 绘图函数 ====================
