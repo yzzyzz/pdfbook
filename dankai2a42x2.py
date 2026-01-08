@@ -47,7 +47,7 @@ def load_config(config_file):
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
-    global print_page_index, fold_mode, A5_SEQ_MAP
+    global print_page_index, fold_mode, A5_SEQ_MAP, landscape_page_mode
 
     # 读取配置参数
     page_size_name = config.get('page', 'print_page_size', fallback='A5')
@@ -70,6 +70,9 @@ def load_config(config_file):
                                          'print_page_index',
                                          fallback=True)
     fold_mode = config.getint('page', 'fold_mode', fallback=2)
+    landscape_page_mode = config.getboolean('page',
+                                            'landscape_page_mode',
+                                            fallback=True)
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
@@ -161,6 +164,7 @@ pagenumber_font_size = 6
 CURRENT_A5_IMAGE_COUNT = A5_IMAGES_1  # 当前每个A5页面的图片数量
 LINE_WIDTH = 1
 lr_padding = 16
+landscape_page_mode = True
 center_padding = 16
 PRE_NONE = 0
 start_index_offset = 0
@@ -263,28 +267,35 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     image_files = [None] * PRE_NONE + image_files
     # --------------- 第三步：计算分组大小 ---------------
     # 根据配置计算每张A4纸包含的图片数量
-    images_per_a5 = CURRENT_A5_IMAGE_COUNT
-    images_per_a4_sheet = images_per_a5 * 4
 
     # 计算需要的总PDF页面数
     total_images = len(image_files)
-    images_per_pdf_page = CURRENT_A5_IMAGE_COUNT * 2  # 每页PDF包含两个A5区域的图片
+
+    if landscape_page_mode:
+        images_per_pdf_page = CURRENT_A5_IMAGE_COUNT * 2
+        images_per_a4_sheet = CURRENT_A5_IMAGE_COUNT * 4
+    else:
+        images_per_pdf_page = CURRENT_A5_IMAGE_COUNT
+        images_per_a4_sheet = CURRENT_A5_IMAGE_COUNT * 2
     global need_A4_pages
     need_A4_pages = (total_images + images_per_a4_sheet -
                      1) // (images_per_a4_sheet)
     total_pdf_pages_needed = need_A4_pages * 2
 
     print(f"配置信息：")
-    print(f"  - 每个A5页面图片数: {images_per_a5}")
+    print(f"  - 每个A5页面图片数: {CURRENT_A5_IMAGE_COUNT}")
     print(f"  - 每张A4纸图片数: {images_per_a4_sheet}")
     print(f"  - 每页PDF图片数: {images_per_pdf_page}")
     print(f"  - 总图片数: {total_images}")
     print(f"  - 需要PDF页数: {total_pdf_pages_needed}")
 
     # --------------- 第四步：初始化PDF画布（横向A4） ---------------
-    landscape_pagesize = landscape(pagesize)  # 横向A4: 297mm x 210mm
-    c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
-    page_width, page_height = landscape_pagesize  # 获取页面尺寸（单位：点，1点=1/72英寸）
+    if landscape_page_mode:
+        pagesize = landscape(pagesize)
+        c = canvas.Canvas(output_pdf, pagesize=pagesize)
+    else:
+        c = canvas.Canvas(output_pdf, pagesize=pagesize)
+    page_width, page_height = pagesize  # 获取页面尺寸（单位：点，1点=1/72英寸）
 
     # A5区域尺寸（每个A5区域是A4页面的一半）
     a5_width = page_width / 2
@@ -293,35 +304,47 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     # --------------- 第五步：处理每页PDF并添加到PDF ---------------
     # 迭代PDF页面而不是图片
     for pdf_page_index in range(total_pdf_pages_needed):
-        draw_center_divider_line(c, page_width, page_height)
 
-        # 确定当前页面的A5区域位置
-        front_a5_x, front_a5_y = 0, 0
-        back_a5_x, back_a5_y = a5_width, 0
-        left_a5, right_a5 = 0, 1
-        # 根据配置绘制图片
-        draw_images_in_a5_region(
-            canvas_obj=c,
-            image_files=image_files,
-            left_or_right=left_a5,  # 正面A5区域索引
-            x_offset=front_a5_x,
-            y_offset=front_a5_y,
-            a5_width=a5_width,
-            a5_height=a5_height,
-            pdf_page_index=pdf_page_index)
+        if landscape_page_mode:  #水平画左右
+            draw_center_divider_line(c, page_width, page_height)
+            # 确定当前页面的A5区域位置
+            front_a5_x, front_a5_y = 0, 0
+            back_a5_x, back_a5_y = a5_width, 0
+            left_a5, right_a5 = 0, 1
+            # 根据配置绘制图片
+            draw_images_in_a5_region(
+                canvas_obj=c,
+                image_files=image_files,
+                left_or_right=left_a5,  # 正面A5区域索引
+                x_offset=front_a5_x,
+                y_offset=front_a5_y,
+                a5_width=a5_width,
+                a5_height=a5_height,
+                pdf_page_index=pdf_page_index)
 
-        draw_images_in_a5_region(
-            canvas_obj=c,
-            image_files=image_files,
-            left_or_right=right_a5,  # 背面A5区域索引
-            x_offset=back_a5_x,
-            y_offset=back_a5_y,
-            a5_width=a5_width,
-            a5_height=a5_height,
-            pdf_page_index=pdf_page_index)
-        print(
-            f"进度：第 {pdf_page_index+1} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
-        )
+            draw_images_in_a5_region(
+                canvas_obj=c,
+                image_files=image_files,
+                left_or_right=right_a5,  # 背面A5区域索引
+                x_offset=back_a5_x,
+                y_offset=back_a5_y,
+                a5_width=a5_width,
+                a5_height=a5_height,
+                pdf_page_index=pdf_page_index)
+            print(
+                f"进度：第 {pdf_page_index+1} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
+            )
+        else:
+            draw_2x2_in_single_page(canvas_obj=c,
+                                    image_files=image_files,
+                                    x_offset=0,
+                                    y_offset=0,
+                                    a5_width=page_width,
+                                    a5_height=page_height,
+                                    pdf_page_index=pdf_page_index)
+            print(
+                f"进度：第 {pdf_page_index+1} 页PDF → 已处理PDF页面 {pdf_page_index + 1}/{total_pdf_pages_needed}"
+            )
         c.showPage()
 
     # --------------- 第六步：保存PDF文件 ---------------
@@ -334,6 +357,103 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
     print(f"   1. 横向打印A4纸张")
     print(f"   2. 每页PDF包含{images_per_pdf_page}张图片")
     print(f"   3. 打印完成后对折装订成A5册子")
+
+
+def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
+                            a5_width, a5_height, pdf_page_index):
+    """
+    在单页A4纸上绘制2x2网格图片
+    :param canvas_obj: PDF画布对象
+    :param image_files: 所有图片文件列表
+    :param x_offset: X偏移量
+    :param y_offset: Y偏移量
+    :param a5_width: A5区域宽度
+    :param a5_height: A5区域高度
+    :param pdf_page_index: 当前PDF页面索引
+    """
+    # 每个A5区域4张图片（2x2排列）- 使用第一张图片的4倍分辨率
+    img_paths = []
+    page_numbers = []
+    base_index = pdf_page_index * 4
+    # 计算当前A5区域对应的图片索引
+    for i in range(4):
+        img_index = base_index + i
+        img_path = image_files[img_index] if img_index < len(
+            image_files) else None
+        img_paths.append(img_path)
+        page_numbers.append(img_index + 1 if img_path else None)
+
+    print(page_numbers)
+    # 每个小图片区域的尺寸（2x2网格）
+    small_width = (a5_width - lr_padding - center_padding) / 2
+    small_height = (a5_height) / 2
+
+    positions = [
+        (a5_width - lr_padding - small_width, small_height),  # 右上
+        (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, small_height),
+        (a5_width - lr_padding - small_width, 0),  # 右下
+        (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, 0),  # 左下
+    ]
+
+    # 绘制4张图片
+    for i, (img_path, pos,
+            page_num) in enumerate(zip(img_paths, positions, page_numbers)):
+        if img_path and os.path.exists(img_path):
+            with Image.open(img_path) as img:
+                img_w, img_h = img.size
+
+            # 计算缩放比例（填满小区域）
+            scale_w = small_width / img_w
+            scale_h = small_height / img_h
+            scale = min(scale_w, scale_h)
+            scaled_w = img_w * scale
+            scaled_h = img_h * scale
+            if small_height - scaled_h < 10:
+                scaled_h = small_height - 12
+            # 在小区域内居中
+            x = x_offset + pos[0] + (small_width - scaled_w) / 2
+            y = y_offset + pos[1] + (small_height - scaled_h) / 2
+            canvas_obj.drawImage(img_path,
+                                 x=x,
+                                 y=y,
+                                 width=scaled_w,
+                                 height=scaled_h,
+                                 preserveAspectRatio=True)
+
+            # 添加页码（如果提供了页码）
+            if page_num is not None and print_page_index:
+                # 设置字体和大小
+                canvas_obj.setFont("Helvetica", 8)
+                # 设置字体颜色为黑色
+                canvas_obj.setFillColorRGB(0, 0, 0)
+                page_number_text = str(page_num)
+                text_width = canvas_obj.stringWidth(page_number_text,
+                                                    "Helvetica", 8)
+                # 页码放在每个小图片的右下角
+                if pdf_page_index % 2 == 1:
+                    page_x = x_offset + pos[0] + small_width - text_width - 5
+                else:
+                    page_x = x_offset + pos[0] + 5
+
+                page_y = y_offset + pos[1] + 3
+                canvas_obj.drawString(page_x, page_y, page_number_text)
+
+    # 绘制分割线
+    if LINE_WIDTH > 0:
+        # 设置线条颜色为黑色
+        canvas_obj.setStrokeColorRGB(0, 0, 0)
+        # 设置线条宽度
+        canvas_obj.setLineWidth(LINE_WIDTH)
+
+        # 绘制垂直分割线
+        if pdf_page_index % 2 == 0:
+            v_line_x = x_offset + a5_width - lr_padding - small_width - LINE_WIDTH / 2
+        else:
+            v_line_x = x_offset + lr_padding + small_width + LINE_WIDTH / 2
+        canvas_obj.line(v_line_x, 10, v_line_x, a5_height - 10)
+        # 绘制水平分割线
+        h_line_y = a5_height / 2
+        canvas_obj.line(lr_padding, h_line_y, a5_width - lr_padding, h_line_y)
 
 
 # ==================== 绘图函数 ====================
@@ -543,9 +663,11 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         if left_or_right == 1:
             positions = [
                 (a5_width - lr_padding - small_width, small_height),  # 右上
-                (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, small_height),
+                (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
+                 small_height),
                 (a5_width - lr_padding - small_width, 0),  # 右下
-                (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, 0),  # 左下
+                (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
+                 0),  # 左下
             ]
         else:
             positions = [
@@ -569,6 +691,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                 scale = min(scale_w, scale_h)
                 scaled_w = img_w * scale
                 scaled_h = img_h * scale
+
                 if small_height - scaled_h < 10:
                     scaled_h = small_height - 12
                     # exit()
@@ -609,7 +732,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
             canvas_obj.setStrokeColorRGB(0, 0, 0)
             # 设置线条宽度
             canvas_obj.setLineWidth(LINE_WIDTH)
-
             # 绘制垂直分割线
             if left_or_right == 1:
                 v_line_x = x_offset + a5_width - lr_padding - small_width - LINE_WIDTH / 2
@@ -618,9 +740,10 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
             canvas_obj.line(v_line_x, 10, v_line_x, a5_height - 10)
             # 绘制水平分割线
             h_line_y = a5_height / 2
-            canvas_obj.line(lr_padding, h_line_y, a5_width - lr_padding, h_line_y)
-            canvas_obj.line(a5_width + lr_padding, h_line_y, a5_width * 2 - lr_padding,
+            canvas_obj.line(lr_padding, h_line_y, a5_width - lr_padding,
                             h_line_y)
+            canvas_obj.line(a5_width + lr_padding, h_line_y,
+                            a5_width * 2 - lr_padding, h_line_y)
 
 
 # --------------- 命令行调用入口 ---------------
