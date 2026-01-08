@@ -721,22 +721,23 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                 # 添加页码（如果提供了页码）
                 if page_num is not None and print_page_index:
                     # 设置字体和大小
-                    canvas_obj.setFont("Helvetica", 8)
-                    # 设置字体颜色为黑色
-                    canvas_obj.setFillColorRGB(0, 0, 0)
-                    page_number_text = str(page_num)
-                    text_width = canvas_obj.stringWidth(
-                        page_number_text, "Helvetica", 8)
-                    # 页码放在每个小图片的右下角
-                    if left_or_right == 1:
-                        page_x = x_offset + pos[0] + 5
-                    else:
-                        page_x = x_offset + pos[
-                            0] + small_width - text_width - 5
+                    if page_num - start_index_offset > 0:
+                        canvas_obj.setFont("Helvetica", 5)
+                        # 设置字体颜色为黑色
+                        canvas_obj.setFillColorRGB(0, 0, 0)
+                        page_number_text = str(page_num-start_index_offset)
+                        text_width = canvas_obj.stringWidth(
+                            page_number_text, "Helvetica", 5)
+                        # 页码放在每个小图片的右下角
+                        if left_or_right == 1:
+                            page_x = x_offset + pos[0] + 5
+                        else:
+                            page_x = x_offset + pos[
+                                0] + small_width - text_width - 5
 
-                    page_y = y_offset + pos[1] + 3
+                        page_y = y_offset + pos[1] + 2
 
-                    canvas_obj.drawString(page_x, page_y, page_number_text)
+                        canvas_obj.drawString(page_x, page_y, page_number_text)
 
         # 绘制分割线
         if LINE_WIDTH > 0:
