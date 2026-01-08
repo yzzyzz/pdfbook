@@ -543,15 +543,15 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         if left_or_right == 1:
             positions = [
                 (a5_width - lr_padding - small_width, small_height),  # 右上
-                (a5_width - lr_padding - small_width * 2, small_height),
+                (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, small_height),
                 (a5_width - lr_padding - small_width, 0),  # 右下
-                (a5_width - lr_padding - small_width * 2, 0),  # 左下
+                (a5_width - lr_padding - small_width * 2 - LINE_WIDTH, 0),  # 左下
             ]
         else:
             positions = [
-                (small_width + lr_padding, small_height),  # 右上
+                (small_width + lr_padding + LINE_WIDTH, small_height),  # 右上
                 (lr_padding, small_height),
-                (small_width + lr_padding, 0),  # 右下
+                (small_width + lr_padding + LINE_WIDTH, 0),  # 右下
                 (lr_padding, 0),  # 左下
             ]
 
@@ -611,11 +611,13 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
             if left_or_right == 1:
                 v_line_x = x_offset + a5_width - lr_padding - small_width - LINE_WIDTH / 2
             else:
-                v_line_x = x_offset + lr_padding + small_width - LINE_WIDTH / 2
-            canvas_obj.line(v_line_x, y_offset, v_line_x, y_offset + a5_height)
+                v_line_x = x_offset + lr_padding + small_width + LINE_WIDTH / 2
+            canvas_obj.line(v_line_x, 10, v_line_x, a5_height - 10)
             # 绘制水平分割线
-            h_line_y = y_offset + small_height + LINE_WIDTH / 2
-            canvas_obj.line(x_offset, h_line_y, x_offset + a5_width, h_line_y)
+            h_line_y = a5_height / 2
+            canvas_obj.line(lr_padding, h_line_y, a5_width - lr_padding, h_line_y)
+            canvas_obj.line(a5_width + lr_padding, h_line_y, a5_width * 2 - lr_padding,
+                            h_line_y)
 
 
 # --------------- 命令行调用入口 ---------------
