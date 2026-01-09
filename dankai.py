@@ -671,25 +671,26 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         print(page_numbers)
         # 每个小图片区域的尺寸（2x2网格）
         small_width = (a5_width - lr_padding - center_padding) / 2
-        small_height = (a5_height) / 2
+        small_height = (a5_height) / 2 - image_margin
 
         if left_or_right == 1:
             positions = [
-                (a5_width - lr_padding - small_width, small_height),  # 右上
+                (a5_width - lr_padding - small_width,
+                 (a5_height) / 2 + image_margin),  # 右上
                 (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
-                 small_height),
+                 (a5_height) / 2 + image_margin),
                 (a5_width - lr_padding - small_width, 0),  # 右下
                 (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
                  0),  # 左下
             ]
         else:
             positions = [
-                (small_width + lr_padding + LINE_WIDTH, small_height),  # 右上
-                (lr_padding, small_height),
+                (small_width + lr_padding + LINE_WIDTH,
+                 (a5_height) / 2 + image_margin),  # 右上
+                (lr_padding, (a5_height) / 2 + image_margin),
                 (small_width + lr_padding + LINE_WIDTH, 0),  # 右下
                 (lr_padding, 0),  # 左下
             ]
-
         # 绘制4张图片
         for i, (img_path, pos,
                 page_num) in enumerate(zip(img_paths, positions,
@@ -704,10 +705,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                 scale = min(scale_w, scale_h)
                 scaled_w = img_w * scale
                 scaled_h = img_h * scale
-
-                # if small_height - scaled_h < image_margin:
-                #     scaled_h = small_height - image_margin - 2
-                # 在小区域内居中
                 x = x_offset + pos[0] + (small_width - scaled_w) / 2
                 y = y_offset + pos[1] + (small_height - scaled_h) / 2
 
@@ -725,7 +722,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                         canvas_obj.setFont("Helvetica", 5)
                         # 设置字体颜色为黑色
                         canvas_obj.setFillColorRGB(0, 0, 0)
-                        page_number_text = str(page_num-start_index_offset)
+                        page_number_text = str(page_num - start_index_offset)
                         text_width = canvas_obj.stringWidth(
                             page_number_text, "Helvetica", 5)
                         # 页码放在每个小图片的右下角
@@ -734,9 +731,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                         else:
                             page_x = x_offset + pos[
                                 0] + small_width - text_width - 5
-
-                        page_y = y_offset + pos[1] + 2
-
+                        page_y = y_offset + pos[1]
                         canvas_obj.drawString(page_x, page_y, page_number_text)
 
         # 绘制分割线
@@ -763,7 +758,6 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
 if __name__ == "__main__":
     # 检查命令行参数数量
     if len(sys.argv) < 4:
-        print("❌ 参数错误！正确用法：")
         print(
             f"python {os.path.basename(__file__)} <图片文件夹路径> <输出PDF文件路径> <配置文件路径>"
         )
