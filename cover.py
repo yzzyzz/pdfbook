@@ -83,7 +83,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
             # 初始化PDF画布
     c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
     # 设置页面边距
-    margin = 80  # 页面边距
+    margin = 0  # 页面边距
     current_x = margin  # 当前绘制的x坐标
     current_y = page_height - margin  # 当前绘制的y坐标（从页面顶部开始）
 

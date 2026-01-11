@@ -29,7 +29,7 @@ function splitpic() {
     local img_extensions=("*.jpg" "*.jpeg" "*.png" "*.bmp" "*.tiff" "*.gif")
 
     # 设置fuzz值，用于定义"白色"的范围
-    local fuzz_value="50%"
+    local fuzz_value="70%"
 
     # 遍历源目录中的所有图片文件，按文件名排序
     for img_ext in "${img_extensions[@]}"; do

@@ -490,28 +490,53 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
 
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
-        if color_mode == 0:  # 灰度模式
-            if pdf_page_index % 2 == 0:  # 正面
-                if left_or_right == 1:  # 右边
-                    img_index = int(pdf_page_index)
-                else:
-                    img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
-            else:  # 反面
-                if left_or_right == 1:  # 右边
-                    img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
-                else:
-                    img_index = int(pdf_page_index)
-        else:  # 彩色模式
-            if pdf_page_index % 2 == 0:  # 正面
-                if left_or_right == 1:  # 右边
-                    img_index = (pdf_page_index // 2) * 4
-                else:
-                    img_index = (pdf_page_index // 2) * 4 + 3
-            else:  # 反面
-                if left_or_right == 1:  # 右边
-                    img_index = (pdf_page_index // 2) * 4 + 2
-                else:
-                    img_index = (pdf_page_index // 2) * 4 + 1
+        if fold_mode == 1: # 左翻页 中美阅读模式
+            if color_mode == 0:  # 灰度模式
+                if pdf_page_index % 2 == 0:  # 正面
+                    if left_or_right == 1:  # 右边
+                        img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+                    else:
+                        img_index = int(pdf_page_index)
+                else:  # 反面
+                    if left_or_right == 1:  # 右边
+                        img_index = int(pdf_page_index)
+                    else:
+                        img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+            else:  # 彩色模式
+                if pdf_page_index % 2 == 0:  # 正面
+                    if left_or_right == 0:  # 右边
+                        img_index = (pdf_page_index // 2) * 4
+                    else:
+                        img_index = (pdf_page_index // 2) * 4 + 3
+                else:  # 反面
+                    if left_or_right == 0:  # 右边
+                        img_index = (pdf_page_index // 2) * 4 + 2
+                    else:
+                        img_index = (pdf_page_index // 2) * 4 + 1
+        else:
+            
+            if color_mode == 0:  # 灰度模式
+                if pdf_page_index % 2 == 0:  # 正面
+                    if left_or_right == 1:  # 右边
+                        img_index = int(pdf_page_index)
+                    else:
+                        img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+                else:  # 反面
+                    if left_or_right == 1:  # 右边
+                        img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
+                    else:
+                        img_index = int(pdf_page_index)
+            else:  # 彩色模式
+                if pdf_page_index % 2 == 0:  # 正面
+                    if left_or_right == 1:  # 右边
+                        img_index = (pdf_page_index // 2) * 4
+                    else:
+                        img_index = (pdf_page_index // 2) * 4 + 3
+                else:  # 反面
+                    if left_or_right == 1:  # 右边
+                        img_index = (pdf_page_index // 2) * 4 + 2
+                    else:
+                        img_index = (pdf_page_index // 2) * 4 + 1
         img_path = image_files[img_index] if img_index < len(
             image_files) else None
         page_number = img_index + 1
@@ -540,7 +565,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                                  width=scaled_w,
                                  height=scaled_h,
                                  preserveAspectRatio=True)
-
+            
             # 添加页码（如果提供了页码）
             if page_number is not None and print_page_index:
                 # 设置字体和大小
