@@ -48,7 +48,7 @@ def load_config(config_file):
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
-    global print_page_index, fold_mode, A5_SEQ_MAP, landscape_page_mode,image_margin
+    global print_page_index, fold_mode, A5_SEQ_MAP, landscape_page_mode, image_margin
 
     # 读取配置参数
     page_size_name = config.get('page', 'print_page_size', fallback='A5')
@@ -614,7 +614,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
             img_path = image_files[img_index] if img_index < len(
                 image_files) else None
             img_paths.append(img_path)
-            page_numbers.append(img_index if img_path else None)
+            page_numbers.append(img_index + 1 if img_path else None)
 
         # 每个小图片区域的尺寸（上下排列）
         small_width = a5_width - lr_padding - center_padding
@@ -659,20 +659,24 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
                                      preserveAspectRatio=True)
 
             # # 添加页码（如果提供了页码）
-            # if page_num is not None:
-            #     # 设置字体和大小
-            #     canvas_obj.setFont("Helvetica", 10)
-            #     # 设置字体颜色为黑色
-            #     canvas_obj.setFillColorRGB(0, 0, 0)
+            if page_num is not None and print_page_index:
+                # 设置字体和大小
+                canvas_obj.setFont("Helvetica", pagenumber_font_size)
+                # 设置字体颜色为黑色
+                canvas_obj.setFillColorRGB(0, 0, 0)
 
-            #     page_number_text = str(page_num)
-            #     text_width = canvas_obj.stringWidth(page_number_text, "Helvetica", 10)
+                page_number_text = str(page_num)
+                text_width = canvas_obj.stringWidth(page_number_text,
+                                                    "Helvetica",
+                                                    pagenumber_font_size)
 
-            #     # 页码放在每个小图片的右下角
-            #     page_x = x_offset + pos[0] + small_width - text_width - 5
-            #     page_y = y_offset + pos[1] + 5
-
-            #     canvas_obj.drawString(page_x, page_y, page_number_text)
+                # 页码放在每个小图片的右下角
+                if is_left:
+                    page_x = x_offset + a5_width - center_padding - text_width - 5
+                else:
+                    page_x = x_offset + center_padding + 5
+                page_y = y_offset + pos[1] + 5
+                canvas_obj.drawString(page_x, page_y, page_number_text)
 
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_4:
         # 每个A5区域4张图片（2x2排列）- 使用第一张图片的4倍分辨率
