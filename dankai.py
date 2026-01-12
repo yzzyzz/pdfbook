@@ -597,9 +597,9 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
         img_paths = []
         page_numbers = []
         # 计算当前A5区域对应的图片索引
-        if pdf_page_index % 2 == 0: # 正面
+        if pdf_page_index % 2 == 0:  # 正面
             if is_left:
-                base_index = pdf_page_index * 4 
+                base_index = pdf_page_index * 4
             else:
                 base_index = pdf_page_index * 4 + 5
         else:
@@ -615,14 +615,20 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
             page_numbers.append(img_index if img_path else None)
 
         # 每个小图片区域的尺寸（上下排列）
-        small_width = a5_width
-        small_height = a5_height / 2
+        small_width = a5_width - lr_padding - center_padding
+        small_height = a5_height / 2 - image_margin
 
         # 上下排列的位置
-        positions = [
-            (0, small_height),  # 上半部分
-            (0, 0)  # 下半部分
-        ]
+        if is_left:
+            positions = [
+                (lr_padding, small_height + image_margin),  # 上半部分
+                (lr_padding, 0)  # 下半部分
+            ]
+        else:
+            positions = [
+                (center_padding, small_height + image_margin),  # 上半部分
+                (center_padding, 0)  # 下半部分
+            ]
 
         for i, (img_path, pos,
                 page_num) in enumerate(zip(img_paths, positions,
@@ -725,7 +731,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
                 (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
                  0),  # 左下
             ]
-            
+
         # 绘制4张图片
         for i, (img_path, pos,
                 page_num) in enumerate(zip(img_paths, positions,
@@ -760,7 +766,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
                         page_number_text = str(page_num - start_index_offset)
                         text_width = canvas_obj.stringWidth(
                             page_number_text, "Helvetica", 5)
-                        
+
                         # 页码放在每个小图片的右下角
                         if is_left:
                             page_x = x_offset + pos[
@@ -781,7 +787,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
                 v_line_x = x_offset + lr_padding + small_width + LINE_WIDTH / 2
             else:
                 v_line_x = x_offset + a5_width - lr_padding - small_width - LINE_WIDTH / 2
-                
+
             canvas_obj.line(v_line_x, 10, v_line_x, a5_height - 10)
             # 绘制水平分割线
             h_line_y = a5_height / 2
