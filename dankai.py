@@ -35,7 +35,8 @@ def load_config(config_file):
         'center_padding': '16',
         'pre_none': '0',
         'start_index_offset': '0',
-        'print_page_index': 'true'
+        'print_page_index': 'true',
+        'image_margin': '5',
     }
 
     # 读取配置文件
@@ -47,7 +48,7 @@ def load_config(config_file):
     # 从配置中读取参数
     global print_page_size, CURRENT_A5_IMAGE_COUNT
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
-    global print_page_index, fold_mode, A5_SEQ_MAP, landscape_page_mode
+    global print_page_index, fold_mode, A5_SEQ_MAP, landscape_page_mode,image_margin
 
     # 读取配置参数
     page_size_name = config.get('page', 'print_page_size', fallback='A5')
@@ -73,6 +74,7 @@ def load_config(config_file):
     landscape_page_mode = config.getboolean('page',
                                             'landscape_page_mode',
                                             fallback=True)
+    image_margin = config.getint('page', 'image_margin', fallback=3)
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
