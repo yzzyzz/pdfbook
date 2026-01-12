@@ -623,12 +623,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
         # 上下排列的位置
         if is_left:
             positions = [
-                (lr_padding, small_height + image_margin),  # 上半部分
+                (lr_padding, a5_height / 2 + image_margin),  # 上半部分
                 (lr_padding, 0)  # 下半部分
             ]
         else:
             positions = [
-                (center_padding, small_height + image_margin),  # 上半部分
+                (center_padding, a5_height / 2 + image_margin),  # 上半部分
                 (center_padding, 0)  # 下半部分
             ]
 
