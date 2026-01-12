@@ -490,7 +490,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
 
     # 根据配置选择绘制方式
     if CURRENT_A5_IMAGE_COUNT == A5_IMAGES_1:
-        if fold_mode == 1: # 左翻页 中美阅读模式
+        if fold_mode == 1:  # 左翻页 中美阅读模式
             if color_mode == 0:  # 灰度模式
                 if pdf_page_index % 2 == 0:  # 正面
                     if left_or_right == 1:  # 右边
@@ -514,7 +514,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                     else:
                         img_index = (pdf_page_index // 2) * 4 + 1
         else:
-            
+
             if color_mode == 0:  # 灰度模式
                 if pdf_page_index % 2 == 0:  # 正面
                     if left_or_right == 1:  # 右边
@@ -565,7 +565,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                                  width=scaled_w,
                                  height=scaled_h,
                                  preserveAspectRatio=True)
-            
+
             # 添加页码（如果提供了页码）
             if page_number is not None and print_page_index:
                 # 设置字体和大小
@@ -595,11 +595,11 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         # 每个A5区域2张图片（上下排列）
         img_paths = []
         page_numbers = []
-
+        
         # 计算当前A5区域对应的图片索引
         base_index = (pdf_page_index) * 2
         for i in range(2):
-            img_index = base_index + i
+            img_index = base_index + i * 2
             img_path = image_files[img_index] if img_index < len(
                 image_files) else None
             img_paths.append(img_path)
