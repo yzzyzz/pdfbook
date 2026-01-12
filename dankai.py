@@ -311,12 +311,13 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             # 确定当前页面的A5区域位置
             front_a5_x, front_a5_y = 0, 0
             back_a5_x, back_a5_y = a5_width, 0
-            left_a5, right_a5 = 0, 1
+            # left_a5, right_a5 = 0, 1
+
             # 根据配置绘制图片
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                left_or_right=left_a5,  # 正面A5区域索引
+                is_left=True,  # 正面A5区域索引
                 x_offset=front_a5_x,
                 y_offset=front_a5_y,
                 a5_width=a5_width,
@@ -326,7 +327,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
             draw_images_in_a5_region(
                 canvas_obj=c,
                 image_files=image_files,
-                left_or_right=right_a5,  # 背面A5区域索引
+                is_left=False,  # 背面A5区域索引
                 x_offset=back_a5_x,
                 y_offset=back_a5_y,
                 a5_width=a5_width,
@@ -472,13 +473,13 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
 # ==================== 绘图函数 ====================
 
 
-def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
+def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
                              y_offset, a5_width, a5_height, pdf_page_index):
     """
     在指定的A5区域内绘制图片，根据配置自动选择绘制方式
     :param canvas_obj: PDF画布对象
     :param image_files: 所有图片文件列表
-    :param left_or_right: 0=左边A5区域, 1=右边A5区域
+    :param is_left: 是否绘制左侧图片
     :param x_offset: X偏移量
     :param y_offset: Y偏移量
     :param a5_width: A5区域宽度
@@ -493,23 +494,23 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         if fold_mode == 1:  # 左翻页 中美阅读模式
             if color_mode == 0:  # 灰度模式
                 if pdf_page_index % 2 == 0:  # 正面
-                    if left_or_right == 1:  # 右边
+                    if not is_left:  # 右边
                         img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
                     else:
                         img_index = int(pdf_page_index)
                 else:  # 反面
-                    if left_or_right == 1:  # 右边
+                    if not is_left:  # 右边
                         img_index = int(pdf_page_index)
                     else:
                         img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
             else:  # 彩色模式
                 if pdf_page_index % 2 == 0:  # 正面
-                    if left_or_right == 0:  # 右边
+                    if is_left:  # 右边
                         img_index = (pdf_page_index // 2) * 4
                     else:
                         img_index = (pdf_page_index // 2) * 4 + 3
                 else:  # 反面
-                    if left_or_right == 0:  # 右边
+                    if is_left:  # 右边
                         img_index = (pdf_page_index // 2) * 4 + 2
                     else:
                         img_index = (pdf_page_index // 2) * 4 + 1
@@ -517,23 +518,23 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
 
             if color_mode == 0:  # 灰度模式
                 if pdf_page_index % 2 == 0:  # 正面
-                    if left_or_right == 1:  # 右边
+                    if not is_left:  # 右边
                         img_index = int(pdf_page_index)
                     else:
                         img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
                 else:  # 反面
-                    if left_or_right == 1:  # 右边
+                    if not is_left:  # 右边
                         img_index = need_A4_pages * 4 - int(pdf_page_index) - 1
                     else:
                         img_index = int(pdf_page_index)
             else:  # 彩色模式
                 if pdf_page_index % 2 == 0:  # 正面
-                    if left_or_right == 1:  # 右边
+                    if not is_left:  # 右边
                         img_index = (pdf_page_index // 2) * 4
                     else:
                         img_index = (pdf_page_index // 2) * 4 + 3
                 else:  # 反面
-                    if left_or_right == 1:  # 右边
+                    if not is_left:  # 右边
                         img_index = (pdf_page_index // 2) * 4 + 2
                     else:
                         img_index = (pdf_page_index // 2) * 4 + 1
@@ -550,7 +551,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
             scaled_w = img_w * scale
             scaled_h = img_h * scale
 
-            if left_or_right == 1:
+            if not is_left:
                 # 背面A5区域，图片向右偏移
                 x = x_offset + (a5_width - lr_padding - scaled_w)
             else:
@@ -579,12 +580,12 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                     text_width = canvas_obj.stringWidth(
                         page_number_text, "Helvetica", pagenumber_font_size)
                     if fold_mode == 1:
-                        if left_or_right == 1:
+                        if not is_left:
                             page_x = x_offset + center_padding + 4
                         else:
                             page_x = x_offset + a5_width - text_width - center_padding - 4
                     else:
-                        if left_or_right == 1:
+                        if not is_left:
                             page_x = x_offset + 4 + center_padding
                         else:
                             page_x = x_offset + a5_width - text_width - 4 - center_padding
@@ -595,7 +596,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         # 每个A5区域2张图片（上下排列）
         img_paths = []
         page_numbers = []
-        
+
         # 计算当前A5区域对应的图片索引
         base_index = (pdf_page_index) * 2
         for i in range(2):
@@ -664,23 +665,23 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
 
         if color_mode == 0:
             if pdf_page_index % 2 == 0:  # 正面
-                if left_or_right == 0:  # 左边
+                if is_left:  # 左边
                     base_index = (need_A4_pages * 4 - pdf_page_index - 1) * 4
                 else:  # 右边
                     base_index = (pdf_page_index) * 4
             else:
-                if left_or_right == 0:  # 左边
+                if is_left:  # 左边
                     base_index = (pdf_page_index) * 4
                 else:  # 右边
                     base_index = (need_A4_pages * 4 - pdf_page_index - 1) * 4
         else:
             if pdf_page_index % 2 == 0:  # 正面
-                if left_or_right == 0:  # 左边
+                if is_left:  # 左边
                     base_index = ((pdf_page_index // 2) * 4 + 3) * 4
                 else:  # 右边
                     base_index = ((pdf_page_index // 2) * 4) * 4
             else:
-                if left_or_right == 0:  # 左边
+                if is_left:  # 左边
                     base_index = ((pdf_page_index // 2) * 4 + 1) * 4
                 else:  # 右边
                     base_index = ((pdf_page_index // 2) * 4 + 2) * 4
@@ -698,7 +699,15 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
         small_width = (a5_width - lr_padding - center_padding) / 2
         small_height = (a5_height) / 2 - image_margin
 
-        if left_or_right == 1:
+        if is_left:
+            positions = [
+                (small_width + lr_padding + LINE_WIDTH,
+                 (a5_height) / 2 + image_margin),  # 右上
+                (lr_padding, (a5_height) / 2 + image_margin),
+                (small_width + lr_padding + LINE_WIDTH, 0),  # 右下
+                (lr_padding, 0),  # 左下
+            ]
+        else:
             positions = [
                 (a5_width - lr_padding - small_width,
                  (a5_height) / 2 + image_margin),  # 右上
@@ -708,14 +717,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                 (a5_width - lr_padding - small_width * 2 - LINE_WIDTH,
                  0),  # 左下
             ]
-        else:
-            positions = [
-                (small_width + lr_padding + LINE_WIDTH,
-                 (a5_height) / 2 + image_margin),  # 右上
-                (lr_padding, (a5_height) / 2 + image_margin),
-                (small_width + lr_padding + LINE_WIDTH, 0),  # 右下
-                (lr_padding, 0),  # 左下
-            ]
+            
         # 绘制4张图片
         for i, (img_path, pos,
                 page_num) in enumerate(zip(img_paths, positions,
@@ -750,12 +752,13 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
                         page_number_text = str(page_num - start_index_offset)
                         text_width = canvas_obj.stringWidth(
                             page_number_text, "Helvetica", 5)
+                        
                         # 页码放在每个小图片的右下角
-                        if left_or_right == 1:
-                            page_x = x_offset + pos[0] + 5
-                        else:
+                        if is_left:
                             page_x = x_offset + pos[
                                 0] + small_width - text_width - 5
+                        else:
+                            page_x = x_offset + pos[0] + 5
                         page_y = y_offset + pos[1]
                         canvas_obj.drawString(page_x, page_y, page_number_text)
 
@@ -766,10 +769,11 @@ def draw_images_in_a5_region(canvas_obj, image_files, left_or_right, x_offset,
             # 设置线条宽度
             canvas_obj.setLineWidth(LINE_WIDTH)
             # 绘制垂直分割线
-            if left_or_right == 1:
-                v_line_x = x_offset + a5_width - lr_padding - small_width - LINE_WIDTH / 2
-            else:
+            if is_left:
                 v_line_x = x_offset + lr_padding + small_width + LINE_WIDTH / 2
+            else:
+                v_line_x = x_offset + a5_width - lr_padding - small_width - LINE_WIDTH / 2
+                
             canvas_obj.line(v_line_x, 10, v_line_x, a5_height - 10)
             # 绘制水平分割线
             h_line_y = a5_height / 2
