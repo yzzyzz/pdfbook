@@ -1,18 +1,16 @@
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A5, A4, A6
+from reportlab.lib.pagesizes import A5, A4, A6, A3, landscape
 from reportlab.lib.units import mm
 from PIL import Image
 from reportlab.pdfbase import pdfmetrics
-from reportlab.lib.pagesizes import landscape
-
 
 import os
 import sys
 import re
 
 zhongxianspace = 22
-
 book_name = "金田一29獄門墊殺人事件"
+pagesize = A4
 def split_text_for_vertical_display(text):
     """
     将文本拆分为垂直显示的元素，但保持数字作为一个整体
@@ -29,6 +27,8 @@ def split_text_for_vertical_display(text):
             # 如果不是数字，按字符拆分
             result.extend(list(part))
     return result
+
+
 # 注册中文字体
 try:
     # 尝试使用系统字体
@@ -68,11 +68,11 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     # --------------- 第一步：参数校验 ---------------
     if not os.path.exists(input_path):
         raise ValueError(f"错误：输入路径 '{input_path}' 不存在！")
-    
+
     # A5高度和宽度作为参考尺寸
     a6_height = A6[1]  # A5竖版的高度
     a6_width = A6[0]  # A5的宽度
-    
+
     landscape_pagesize = landscape(pagesize)  # 横向A4: 297mm x 210mm
     page_width, page_height = landscape_pagesize  # 获取页面尺寸（单位：点，1点=1/72英寸）
     # 检查输出PDF路径的父目录是否存在（不存在则创建）
@@ -80,7 +80,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
     if output_dir and not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
         print(f"提示：已自动创建输出目录 '{output_dir}'")
-            # 初始化PDF画布
+        # 初始化PDF画布
     c = canvas.Canvas(output_pdf, pagesize=landscape_pagesize)
     # 设置页面边距
     margin = 0  # 页面边距
@@ -116,8 +116,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
         if not image_files:
             raise RuntimeError(f"错误：文件夹 '{image_folder}' 中未找到任何有效图片！")
         print(f"提示：从文件夹中找到 {len(image_files)} 张有效图片")
-        
-        
+
         text_x = 0
         # 处理所有图片
         for i, image_file in enumerate(image_files):
@@ -134,7 +133,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
                             img = img.rotate(270, expand=True)
                         elif orientation == 8:
                             img = img.rotate(90, expand=True)
-                            
+
                 img_w, img_h = img.size
 
             # 计算缩放比例，保持宽高比
@@ -148,7 +147,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
             c.drawImage(
                 image_file,
                 x=current_x,
-                y= (a6_height - scaled_h)/2,  # 从当前y位置向下绘制
+                y=(a6_height - scaled_h) / 2,  # 从当前y位置向下绘制
                 width=scaled_w,
                 height=scaled_h,
                 preserveAspectRatio=True,
@@ -161,7 +160,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
             # 更新下一个图片的x坐标
             space_points = zhongxianspace * 72 / 25.4
             if text_x == 0:
-                text_x = a6_width +5
+                text_x = a6_width + 5
             current_x += (a6_width + space_points)  # 加10点间距
 
         # 保存PDF文件
@@ -181,7 +180,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
             char_y = start_y - j * char_height
             centered_x = text_x
             c.drawString(centered_x, char_y, element)
-            
+
         c.save()
         print(f"\n✅ PDF生成完成！")
         print(f"📁 输出路径：{os.path.abspath(output_pdf)}")
@@ -195,7 +194,7 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
 
         if file_ext not in valid_image_ext:
             raise ValueError(f"错误：输入文件 '{input_path}' 不是有效的图片格式！")
-        
+
         with Image.open(input_path) as img:
             img_w, img_h = img.size
             # 计算缩放比例，保持宽高比
@@ -206,19 +205,16 @@ def generate_pdf_from_images(input_path: str, output_pdf: str, pagesize=A4):
             c.drawImage(
                 input_path,
                 x=current_x,
-                y= (a6_height - scaled_h)/2,  # 从当前y位置向下绘制
+                y=(a6_height - scaled_h) / 2,  # 从当前y位置向下绘制
                 width=scaled_w,
                 height=scaled_h,
                 preserveAspectRatio=True,
                 mask='auto')
 
         c.save()
-        
-        
+
     else:
         raise ValueError(f"错误：输入路径 '{input_path}' 既不是文件夹也不是文件！")
-
-    
 
 
 # --------------- 命令行调用入口 ---------------
