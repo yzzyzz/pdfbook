@@ -38,15 +38,15 @@ def merge_two_images_with_vertical_text(img1_path, img2_path, text_width_mm, tex
 
     # -------------------------- 自动适配文字大小 + 竖排文字绘制 --------------------------
     # 文字大小自适应：基于留白宽度动态调整字号，保证文字在宽度内显示完整
-    font_size = int(text_width_pixel * 0.8)  # 字号为留白宽度的80%，核心适配逻辑
+    font_size = int(text_width_pixel * 0.4)  # 字号为留白宽度的80%，核心适配逻辑
     # 加载字体（优先系统默认无衬线字体，跨平台兼容）
     try:
         # Windows系统
-        font = ImageFont.truetype("simhei.ttf", font_size, encoding="utf-8")
+        font = ImageFont.truetype("./FZXSS-Lusitana-Hybrid.ttf", font_size, encoding="utf-8")
     except:
         try:
             # Mac系统
-            font = ImageFont.truetype("/Library/Fonts/PingFang.ttc", font_size)
+            font = ImageFont.truetype("./FZXSS-Lusitana-Hybrid.ttf", font_size)
         except:
             # Linux/无指定字体时，使用默认字体
             font = ImageFont.load_default(size=font_size)

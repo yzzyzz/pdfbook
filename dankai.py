@@ -665,7 +665,7 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
                 # 设置字体颜色为黑色
                 canvas_obj.setFillColorRGB(0, 0, 0)
 
-                page_number_text = str(page_num)
+                page_number_text = str(page_num + start_index_offset)
                 text_width = canvas_obj.stringWidth(page_number_text,
                                                     "Helvetica",
                                                     pagenumber_font_size)
