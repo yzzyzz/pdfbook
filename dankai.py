@@ -450,9 +450,9 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
                                                     "Helvetica", 8)
                 # 页码放在每个小图片的右下角
                 if pdf_page_index % 2 == 1:
-                    page_x = x_offset + pos[0] + small_width - text_width - 5
+                    page_x = x_offset + pos[0] + small_width - text_width - 6
                 else:
-                    page_x = x_offset + pos[0] + 5
+                    page_x = x_offset + pos[0] + 6
 
                 page_y = y_offset + pos[1] + 3
                 canvas_obj.drawString(page_x, page_y, page_number_text)
@@ -472,8 +472,8 @@ def draw_2x2_in_single_page(canvas_obj, image_files, x_offset, y_offset,
         canvas_obj.line(v_line_x, 8, v_line_x, a5_height - 8)
         # 绘制水平分割线
         h_line_y = a5_height / 2
-        canvas_obj.line(v_line_x - small_width, h_line_y,
-                        v_line_x + small_width, h_line_y)
+        canvas_obj.line(v_line_x - small_width + 8, h_line_y,
+                        v_line_x + small_width - 8, h_line_y)
 
 
 # ==================== 绘图函数 ====================
