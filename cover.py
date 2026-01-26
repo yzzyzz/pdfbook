@@ -8,8 +8,8 @@ import os
 import sys
 import re
 
-zhongxianspace = 22
-book_name = "金田一29獄門墊殺人事件"
+zhongxianspace = 18
+book_name = "脚气"
 pagesize = A4
 def split_text_for_vertical_display(text):
     """

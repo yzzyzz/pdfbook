@@ -46,7 +46,7 @@ def load_config(config_file):
         raise FileNotFoundError(f"配置文件 {config_file} 不存在")
 
     # 从配置中读取参数
-    global print_page_size, CURRENT_A5_IMAGE_COUNT
+    global print_page_size, CURRENT_A5_IMAGE_COUNT,split_horizontal_image
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
     global print_page_index, fold_mode, A5_SEQ_MAP, landscape_page_mode, image_margin
 
@@ -75,6 +75,9 @@ def load_config(config_file):
                                             'landscape_page_mode',
                                             fallback=True)
     image_margin = config.getint('page', 'image_margin', fallback=3)
+    split_horizontal_image = config.getboolean('page',
+                                            'split_horizontal_image',
+                                            fallback=True)
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
@@ -174,6 +177,7 @@ print_page_index = True
 need_A4_pages = 0
 color_mode = 0  # 0 灰度模式，1 彩色模式
 image_margin = 3
+split_horizontal_image = True
 
 
 # 在页面中央绘制一条黑色虚线，分隔两个A5区域
@@ -243,7 +247,7 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 
     # 重新组织图片：
     # 如果是 A5_IMAGES_1 或者 A5_IMAGES_4 ，如果原始图片里面有横图，则将图片分割为2张竖图
-    if CURRENT_A5_IMAGE_COUNT in [A5_IMAGES_1, A5_IMAGES_4]:
+    if CURRENT_A5_IMAGE_COUNT in [A5_IMAGES_1, A5_IMAGES_4] and split_horizontal_image:
         print("检查并处理横图...")
         new_image_files = []
         for img_path in image_files:
