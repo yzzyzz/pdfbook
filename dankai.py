@@ -3,7 +3,7 @@
 #  输出：生成的PDF文件（ booklet 模式）
 
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4, A5
+from reportlab.lib.pagesizes import A4, A5, B5
 from reportlab.lib.units import mm
 from PIL import Image
 import os
@@ -46,7 +46,7 @@ def load_config(config_file):
         raise FileNotFoundError(f"配置文件 {config_file} 不存在")
 
     # 从配置中读取参数
-    global print_page_size, CURRENT_A5_IMAGE_COUNT,split_horizontal_image
+    global print_page_size, CURRENT_A5_IMAGE_COUNT, split_horizontal_image
     global LINE_WIDTH, lr_padding, center_padding, PRE_NONE, start_index_offset
     global print_page_index, fold_mode, A5_SEQ_MAP, landscape_page_mode, image_margin
 
@@ -54,6 +54,8 @@ def load_config(config_file):
     page_size_name = config.get('page', 'print_page_size', fallback='A5')
     if page_size_name == 'A5':
         print_page_size = A5
+    elif page_size_name == 'B5':
+        print_page_size = B5
     else:
         print_page_size = A4  # 默认为A4
 
@@ -76,8 +78,8 @@ def load_config(config_file):
                                             fallback=True)
     image_margin = config.getint('page', 'image_margin', fallback=3)
     split_horizontal_image = config.getboolean('page',
-                                            'split_horizontal_image',
-                                            fallback=True)
+                                               'split_horizontal_image',
+                                               fallback=True)
 
     print(f"配置信息：")
     print(f"  - 页面尺寸: {page_size_name}")
@@ -247,7 +249,8 @@ def generate_pdf_from_images(image_folder: str, output_pdf: str, pagesize=A4):
 
     # 重新组织图片：
     # 如果是 A5_IMAGES_1 或者 A5_IMAGES_4 ，如果原始图片里面有横图，则将图片分割为2张竖图
-    if CURRENT_A5_IMAGE_COUNT in [A5_IMAGES_1, A5_IMAGES_4] and split_horizontal_image:
+    if CURRENT_A5_IMAGE_COUNT in [A5_IMAGES_1, A5_IMAGES_4
+                                  ] and split_horizontal_image:
         print("检查并处理横图...")
         new_image_files = []
         for img_path in image_files:
