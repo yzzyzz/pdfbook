@@ -590,15 +590,15 @@ def draw_images_in_a5_region(canvas_obj, image_files, is_left, x_offset,
                         page_number_text, "Helvetica", pagenumber_font_size)
                     if fold_mode == 1:
                         if not is_left:
-                            page_x = x_offset + center_padding + 4
+                            page_x = x_offset + center_padding + 14
                         else:
-                            page_x = x_offset + a5_width - text_width - center_padding - 4
+                            page_x = x_offset + a5_width - text_width - center_padding - 14
                     else:
                         if not is_left:
                             page_x = x_offset + 4 + center_padding
                         else:
                             page_x = x_offset + a5_width - text_width - 4 - center_padding
-                    page_y = y_offset + 4
+                    page_y = y_offset + 14
                     canvas_obj.drawString(page_x, page_y, page_number_text)
 
     elif CURRENT_A5_IMAGE_COUNT == A5_IMAGES_2:
