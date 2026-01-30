@@ -28,7 +28,7 @@ for img in "$input_dir"/*; do
             -modulate 100,80,120 \
             -level 5%,95%,1.2 \
             -colorspace Gray \
-            "output/clean_$filename"
+            "output/$filename.png"
         
         echo "已处理: $filename -> clean_$filename"
     fi
